@@ -1,0 +1,49 @@
+Mesh Count:   0 || Vert Count:   148 || Chunk Length: 16 || File Offset:  138944 || Of Type: stadium
+Mesh Count:   1 || Vert Count:   246 || Chunk Length: 24 || File Offset:  141328 || Of Type: stadium
+Mesh Count:   2 || Vert Count:    36 || Chunk Length: 24 || File Offset:  147248 || Of Type: stadium
+Mesh Count:   3 || Vert Count:    12 || Chunk Length: 24 || File Offset:  148128 || Of Type: stadium
+Mesh Count:   4 || Vert Count:    36 || Chunk Length: 24 || File Offset:  148432 || Of Type: stadium
+Mesh Count:   5 || Vert Count:  2988 || Chunk Length: 24 || File Offset:  149312 || Of Type: stadium
+Mesh Count:   6 || Vert Count:   432 || Chunk Length: 24 || File Offset:  221040 || Of Type: stadium
+Mesh Count:   7 || Vert Count:  4848 || Chunk Length: 24 || File Offset:  231424 || Of Type: stadium
+Mesh Count:   8 || Vert Count:  1704 || Chunk Length: 24 || File Offset:  347792 || Of Type: stadium
+Mesh Count:   9 || Vert Count:   864 || Chunk Length: 24 || File Offset:  388704 || Of Type: stadium
+Mesh Count:  10 || Vert Count:  1032 || Chunk Length: 24 || File Offset:  409456 || Of Type: stadium
+Mesh Count:  11 || Vert Count:  1548 || Chunk Length: 24 || File Offset:  434240 || Of Type: stadium
+Mesh Count:  12 || Vert Count:  2024 || Chunk Length: 24 || File Offset:  471408 || Of Type: stadium
+Mesh Count:  13 || Vert Count:  7863 || Chunk Length: 24 || File Offset:  520000 || Of Type: stadium
+Mesh Count:  14 || Vert Count:  4058 || Chunk Length: 24 || File Offset:  708736 || Of Type: stadium
+Mesh Count:  15 || Vert Count:  4624 || Chunk Length: 24 || File Offset:  806144 || Of Type: stadium
+Mesh Count:  16 || Vert Count:  6714 || Chunk Length: 24 || File Offset:  917136 || Of Type: stadium
+Mesh Count:  17 || Vert Count:    28 || Chunk Length: 24 || File Offset: 1078288 || Of Type: stadium
+Mesh Count:  18 || Vert Count:   672 || Chunk Length: 24 || File Offset: 1078976 || Of Type: stadium
+Mesh Count:  19 || Vert Count:   672 || Chunk Length: 24 || File Offset: 1095120 || Of Type: stadium
+Mesh Count:  20 || Vert Count:   144 || Chunk Length: 24 || File Offset: 1111264 || Of Type: stadium
+Mesh Count:  21 || Vert Count:   924 || Chunk Length: 24 || File Offset: 1114736 || Of Type: stadium
+Mesh Count:  22 || Vert Count:   114 || Chunk Length: 24 || File Offset: 1136928 || Of Type: stadium
+Mesh Count:  23 || Vert Count:    48 || Chunk Length: 24 || File Offset: 1139680 || Of Type: stadium
+Mesh Count:  24 || Vert Count:  1067 || Chunk Length: 24 || File Offset: 1140848 || Of Type: stadium
+Mesh Count:  25 || Vert Count:   407 || Chunk Length: 24 || File Offset: 1166480 || Of Type: stadium
+Mesh Count:  26 || Vert Count:   297 || Chunk Length: 24 || File Offset: 1176272 || Of Type: stadium
+Mesh Count:  27 || Vert Count:   174 || Chunk Length: 24 || File Offset: 1183424 || Of Type: stadium
+Mesh Count:  28 || Vert Count:  1536 || Chunk Length: 24 || File Offset: 1187616 || Of Type: stadium
+Mesh Count:  29 || Vert Count:   912 || Chunk Length: 20 || File Offset: 1224496 || Of Type: stadium
+Mesh Count:  30 || Vert Count:    45 || Chunk Length: 24 || File Offset: 1242752 || Of Type: stadium
+Mesh Count:  31 || Vert Count:     8 || Chunk Length: 24 || File Offset: 1243856 || Of Type: stadium
+Mesh Count:  32 || Vert Count:   141 || Chunk Length: 24 || File Offset: 1244064 || Of Type: stadium
+Mesh Count:  33 || Vert Count:  2919 || Chunk Length: 24 || File Offset: 1247472 || Of Type: stadium
+Mesh Count:  34 || Vert Count:    66 || Chunk Length: 24 || File Offset: 1317552 || Of Type: stadium
+Mesh Count:  35 || Vert Count:   612 || Chunk Length: 24 || File Offset: 1319152 || Of Type: stadium
+Mesh Count:  36 || Vert Count:    19 || Chunk Length: 24 || File Offset: 1333856 || Of Type: stadium
+Mesh Count:  37 || Vert Count:    19 || Chunk Length: 24 || File Offset: 1334336 || Of Type: stadium
+Mesh Count:  38 || Vert Count:    52 || Chunk Length: 24 || File Offset: 1334816 || Of Type: stadium
+Mesh Count:  39 || Vert Count:   192 || Chunk Length: 24 || File Offset: 1336080 || Of Type: stadium
+Mesh Count:  40 || Vert Count:   111 || Chunk Length: 24 || File Offset: 1340704 || Of Type: stadium
+Mesh Count:  41 || Vert Count:  1140 || Chunk Length: 16 || File Offset: 1343392 || Of Type: stadium
+Group Offset: 1400256
+Group Offset: 1400416
+Group Offset: 1400656
+Group Offset: 1401856
+Group Offset: 1402016
+Group Offset: 1402176
+Group Offset: 1402624
