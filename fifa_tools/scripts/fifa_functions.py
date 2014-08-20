@@ -157,7 +157,6 @@ def mesh_descr_convert(descr):
 	opts=[]
 	for i in descr:
 		opts.append(i[0]+':'+i[4])
-	
 	return opts
 	
 

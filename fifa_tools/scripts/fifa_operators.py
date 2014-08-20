@@ -156,7 +156,7 @@ class colour_assign(bpy.types.Operator) :
 		try:
 			scn.vx_color=fifa_func.hex_to_rgb(scn.vx_color_hex)
 		except:
-			self.report({ERROR},'Malformed hex color')
+			self.report({'ERROR'},'Malformed hex color')
 		return{'FINISHED'}
 
 class get_color(bpy.types.Operator):
@@ -176,15 +176,10 @@ class assign_color_to_map(bpy.types.Operator):
 		try:
 			active_color_layer=object.data.vertex_colors.active.name
 		except:
-			self.report('ERROR','No active color layer')
-			return{'CANCELED'}
-			
+			self.report({'ERROR'},'No active color layer')
+			return{'CANCELLED'}
 		
-		fifa_func.paint_faces(object,scn.vx_color,active_color_layer)
-		
-		
-		
-		
+		fifa_func.paint_faces(object,scn.vx_color,active_color_layer.name)
 		return{'FINISHED'}
 
 class auto_paint(bpy.types.Operator):
@@ -196,9 +191,13 @@ class auto_paint(bpy.types.Operator):
 		try:
 			active_color_layer=object.data.vertex_colors.active.name
 		except:
-			self.report('ERROR','No active color layer')
-			return{'CANCELED'}
-			
+			self.report({'ERROR'},'No active color layer')
+			return{'CANCELLED'}
+		
+		#Context Mode Check
+		if context.mode=='EDIT_MESH':
+			self.report({'ERROR'},'Should be in Object Mode')
+			return{'CANCELLED'}
 		
 		fifa_func.auto_paint_mesh(object,active_color_layer)
 		
@@ -1171,7 +1170,6 @@ class crowd_export(bpy.types.Operator):
 		
 				
 #VERTEX GROUP SEPARATOR
-
 class ob_group_separator(bpy.types.Operator):
 	bl_idname='mesh.ob_vertex_groups_separate'
 	bl_label='SPLIT MODEL'

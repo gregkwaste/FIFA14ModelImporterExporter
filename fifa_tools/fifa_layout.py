@@ -2,7 +2,7 @@ bl_info = {
 	"name": "FIFA 14 3D IMPORTER/EXPORTER",
 	"description": "RX3 Importer/Exporter",
 	"author": "arti-10",
-	"version": (0, 63,'beta'),
+	"version": (0, 64,'beta'),
 	"blender": (2, 67, 0),
 	"location": "View3D > Scene",
 	"warning": "", # used for warning icon and text in addons panel
@@ -10,13 +10,13 @@ bl_info = {
 	"tracker_url": "",
 	"category": "Import-Export"}
 
+version=(0,64)
 import bpy,imp
-
 from bpy.props import *
 fifa_operators_path='fifa_tools\\scripts\\fifa_operators.py'
 fifa_operators=imp.load_source('fifa_operators',fifa_operators_path)
 from fifa_operators import light_props as light_props
-version_text='v0.63, made by arti-10'
+version_text='v'+str(version[0]) + '.' + str(version[1]) + ', made by arti-10'
 
 
 
@@ -78,6 +78,7 @@ class CrowdSection(bpy.types.Panel):
 
 
 class Vertex_color_panel(bpy.types.Panel):
+	"""Creates a Panel in the Object properties window"""
 	bl_label = "FIFA 3D IE - Vertex Coloring Panel"
 	bl_idname = "vertex_color_panel"
 	bl_space_type = 'PROPERTIES'
