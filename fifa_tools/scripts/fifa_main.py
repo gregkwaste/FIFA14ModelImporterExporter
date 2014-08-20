@@ -551,12 +551,13 @@ def file_init(path):
 			f.data.read(8)
 			for i in range(sec_num):
 				#Uniform the offset
-				unified=False
-				while unified==False:
-					if hex(f.data.tell())[-1] in ['0','4','8','C']:
-						unified=True
-					else:
-						f.data.read(1)
+				f.data.read(f.data.tell() % 4)
+				#unified=False
+				# while unified==False:
+					# if hex(f.data.tell())[-1] in ['0','4','8','C']:
+						# unified=True
+					# else:
+						# f.data.read(1)
 				
 				#find sec length
 				sec_found=False
@@ -577,6 +578,7 @@ def file_init(path):
 		original_size=struct.unpack('<I',f.data.read(4))[0]
 		f_size=len(f.data.read())+12
 		
+		#Cloppy Checking
 		if not original_size==f_size and path.split(sep='.')[-1]=='rx3' and path.split(sep='\\')[-1].split(sep='_')[0]=='stadium' and scn.game_enum=='0':
 			e=open('fifa_tools\\scripts\\msg','r')
 			print(e.read())

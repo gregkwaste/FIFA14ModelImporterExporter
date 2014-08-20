@@ -924,22 +924,22 @@ def auto_paint_mesh(object,layer_name):
 	bm=bmesh.new()
 	bm.from_mesh(object.data)
 	bm.normal_update()
-	base_0=0.498
-	base_1=0.502
-	
+	#base_0=0.498
+	#base_1=0.502
 	
 	obj_rotation=object.rotation_euler
 	print(obj_rotation)
 	collayer=bm.loops.layers.color[layer_name]
-	#red axis base vector
-	#blue axis base vector
 	
 	for f in bm.faces:
 		for l in f.loops:
 			vert=l.vert
+			
 			#rot=Euler((-1.5707963705062866, 0.0, 0.0), 'XYZ')
 			norm=vert.normal
+			#norm.rotate(obj_rotation)
 			norm.normalize()
+			
 			#norm.rotate(rot)
 			
 			if scn.autopaint_modes=='0':
@@ -956,7 +956,11 @@ def auto_paint_mesh(object,layer_name):
 	
 
 def norm_to_col(x,axis):
-    
+    #converting normal Vector to Color Information
+	#Arguments:
+	#x:	normal Vector
+	#axis: desired axis
+	
     try:
         angle=Vector((x,0)).angle_signed(Vector((1,0)))
     except:
