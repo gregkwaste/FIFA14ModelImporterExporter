@@ -7,5 +7,5 @@ Current WIP version 0.64
 
 
 Creator & Owner
-Greg Kassapidis
+Greg Kasapidis
 gregkwaste@gmail.com
