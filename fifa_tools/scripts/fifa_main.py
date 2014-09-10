@@ -311,7 +311,7 @@ def createmesh(verts,faces,uvs,name,count,id,subname,colors,normal_flag,normals)
 
 
 #IDENTIFY THE FILE
-def file_ident(data):
+def file_ident_func(data):
 	print('FILE IDENTIFICATION IN PROGRESS')
 	offsets=[]
 	name=str(data.read(3))[2:-1]
@@ -322,6 +322,7 @@ def file_ident(data):
 	elif endian=='l':
 		endian='<'  
 		endianstr='Little Endian'
+	print('ENDIANNESS DETECTED: ',endianstr)
 	
 	data.read(4)
 	filesize=struct.unpack(endian+'I',data.read(4))[0]
@@ -342,7 +343,8 @@ def file_ident(data):
 	
 	return name,endianstr,endian,('Total File Size:',round((filesize/1024),2),'KBs'),offsets,mesh_count
 
-
+def file_ident(f):
+	f.container_type,f.endianess,f.endian,f.size,f.offsets,f.count= file_ident_func(f.data)
 
 def create_material(f,offset,count):
 	f.data.seek(offset)
@@ -573,22 +575,22 @@ def file_init(path):
 				
 			t.close()
 			f.data=open(t.name,'rb')
-			
+		
+		
 		f.data.seek(8)
 		original_size=struct.unpack('<I',f.data.read(4))[0]
 		f_size=len(f.data.read())+12
 		
-		#Cloppy Checking
+		#Clopy Checking
 		if not original_size==f_size and path.split(sep='.')[-1]=='rx3' and path.split(sep='\\')[-1].split(sep='_')[0]=='stadium' and scn.game_enum=='0':
 			e=open('fifa_tools\\scripts\\msg','r')
 			print(e.read())
 			print('                           I SEE WHAT YOU DID THERE')
 			e.close()
 			return 'file_clopy'
-			
-		else:
-			f.data.seek(0)
-			return(f)
+		
+		f.data.seek(0)
+		return(f)
 	
 	except IOError as e:
 		return 'io_error'

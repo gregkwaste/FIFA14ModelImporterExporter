@@ -406,7 +406,7 @@ class file_import(bpy.types.Operator) :
 			if f=='io_error':
 				self.report({'ERROR'},'File Error')
 				return {'CANCELLED'}
-			
+							
 			
 			f.type=path.split(sep='\\')[-1].split(sep='_')[0]+'_'+'texture'
 			print('File type Detected: ',f.type)
@@ -471,7 +471,7 @@ class file_import(bpy.types.Operator) :
 			if path.split(sep='_')[-1].split(sep='.')[0]=='textures':
 				f.type='texture'
 				self.report({'ERROR'},'Texture detected in a Model Path')
-				break
+				return {'CANCELLED'}
 			else:
 				f.type=path.split(sep='\\')[-1].split(sep='_')[0]
 			
@@ -481,7 +481,7 @@ class file_import(bpy.types.Operator) :
 			
 			print('FILE TYPE DETECTED: ',f.type)
 			
-			f.container_type,f.endianess,f.endian,f.size,f.offsets,f.count= fifa_main.file_ident(f.data)
+			fifa_main.file_ident(f)
 			fifa_main.read_file_offsets(f,dir)
 			
 			#print(f.group_names)
