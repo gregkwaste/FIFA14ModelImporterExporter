@@ -410,7 +410,7 @@ class file_import(bpy.types.Operator) :
 			
 			f.type=path.split(sep='\\')[-1].split(sep='_')[0]+'_'+'texture'
 			print('File type Detected: ',f.type)
-			f.container_type,f.endianess,f.endian,f.size,f.offsets,f.count= fifa_main.file_ident(f.data)
+			fifa_main.file_ident(f)
 			fifa_main.read_file_offsets(f,dir)
 			
 			##Reading is enough for Stadium Textures

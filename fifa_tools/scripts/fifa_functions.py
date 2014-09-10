@@ -98,7 +98,7 @@ def read_test(f,opts,count):
 				colcount+=1
 				cols_1.append(read_cols(f))
 			elif j[0][0]=='i':
-				bones_i.append(struct.unpack('<4B',f.read(4)))
+				bones_i.append(struct.unpack('<8B',f.read(8)))
 			elif j[0][0]=='w':	
 				bones_w.append(struct.unpack('<4B',f.read(4)))
 			elif j[0][0]=='c':	
