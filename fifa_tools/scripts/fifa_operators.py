@@ -24,6 +24,7 @@ tex_names=[]
 objectcount=0
 files=[]
 dir='fifa_tools\\'
+dir=os.path.realpath(dir)
 sig='FIFA 3D Importer/Exporter, made by arti. v0.63. All rights reserved.'
 
 
@@ -428,20 +429,29 @@ class file_import(bpy.types.Operator) :
 					new_mat.alpha=0
 					new_mat.specular_alpha=0	
 				else:	
+					#Use Existing Material
 					new_mat=bpy.data.materials[f.type.split(sep='_')[0]+'_'+str(f.id)]
-					#Clear Texture Slots
 					for i in range(5):
-						new_mat.texture_slots.clear(i)
-					#Add new Ones	
-							
-				for name in f.tex_names:
+						new_mat.texture_slots.clear(i) #Clear Texture Slots
+					
+				#Add Textures
+				for id in range(f.texture_count):
+					
+					name=f.tex_names[id]
+					#Empty tex_name 
+					if len(name) ==0:
+						print('Skipping Texture, Probably Unsupported')
+						continue
+					
 					slot=new_mat.texture_slots.add()
+					
 					if name in bpy.data.textures:
 						new_tex=bpy.data.textures[name]
 					else:	
 						new_tex=bpy.data.textures.new(name,type='IMAGE')
-						new_tex.image=bpy.data.images.load(dir+name)
 					
+					new_tex.image=bpy.data.images.load(dir+'\\'+name)
+						
 					slot.texture=new_tex
 					slot.texture_coords='UV'
 					slot.uv_layer='map0'
@@ -449,6 +459,8 @@ class file_import(bpy.types.Operator) :
 					slot.use_map_color_diffuse=True
 					slot.use_map_alpha=True
 					slot.alpha_factor=1
+					
+					
 					
 		###MODEL FILES HANDLING###
 		

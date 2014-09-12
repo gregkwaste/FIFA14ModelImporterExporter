@@ -199,7 +199,7 @@ def read_texture(file,offset,endian,path):
 	
 	if identifier==0:
 		data=fifa_func.read_dds_header(0)
-		data[87]=49
+		#data[87]=49
 		string='DXT1'
 	elif identifier==1:
 		data=fifa_func.read_dds_header(0)
@@ -207,8 +207,13 @@ def read_texture(file,offset,endian,path):
 		string='DXT3'
 	elif identifier==2:
 		data=fifa_func.read_dds_header(144)
-		data[87]=53
+		#data[87]=53
 		string='DXT5'
+	elif identifier==7:
+		data=fifa_func.read_dds_header(288)
+		#data[86]=49
+		#data[87]=48
+		string='NVTT'
 	else:
 		print('NOT RECOGNISABLE IMAGE FILE')
 		return  
@@ -381,6 +386,10 @@ def read_props(file,offset,endian):
 	print('READING PROPS', 'COUNT: ',count)
 	
 	if file.type.endswith('_texture'):
+		#Initialize array
+		for i in range(count):
+			file.tex_names.append('')
+		
 		for i in range(count):
 			file.data.read(4)
 			textlen=struct.unpack(endian+'i',file.data.read(4))[0]
@@ -391,10 +400,14 @@ def read_props(file,offset,endian):
 			try:
 				os.rename('fifa_tools\\texture_'+str(i)+'.dds','fifa_tools\\'+text+'.dds')
 				print('Renaming texture_'+str(i)+'.dds to '+text+'.dds')
+				file.tex_names[i]=text+'.dds'
+			except FileNotFoundError:
+				print('Unsupported Image File')
 			except FileExistsError:
-			   print('!!!File Exists!!!')   
+			    print('!!!File Exists!!!')   
+			    file.tex_names[i]=text+'.dds'
 			
-			file.tex_names.append(text+'.dds')  
+			
 	else:
 		for i in range(count):
 			off=struct.unpack(endian+'I',file.data.read(4))[0]
