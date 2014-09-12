@@ -25,7 +25,7 @@ objectcount=0
 files=[]
 dir='fifa_tools\\'
 dir=os.path.realpath(dir)
-sig='FIFA 3D Importer/Exporter, made by arti. v0.63. All rights reserved.'
+sig='FIFA 3D Importer/Exporter, made by arti. v0.63. All rights reserved.©'
 
 
 texture_name_dict={0:'diffuseTexture',

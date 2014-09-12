@@ -75,10 +75,6 @@ def read_file_offsets(file,dir):
 			file.v_bones_w.append(temp[4])
 			file.mesh_count+=1
 						
-
-			
-			
-				
 			log.write('\n')
 			
 			
@@ -252,7 +248,7 @@ def createmesh(verts,faces,uvs,name,count,id,subname,colors,normal_flag,normals)
 	mesh=bpy.data.meshes.new("mesh"+str(count))
 	mesh.from_pydata(verts,[],faces)
 	
-
+	
 	
 	
 	for i in range(len(uvs)):
@@ -305,9 +301,9 @@ def createmesh(verts,faces,uvs,name,count,id,subname,colors,normal_flag,normals)
 	object.location=(0,0,0)
 	
 	#Transformation attributes inherited from bounding boxes
-	if not name=='stadium': 
+	#if not name=='stadium': 
 		#object.scale=Vector((0.1,0.1,0.1))
-		object.rotation_euler=Euler((1.570796251296997, -0.0, 0.0), 'XYZ')
+		#object.rotation_euler=Euler((1.570796251296997, -0.0, 0.0), 'XYZ')
 	bpy.context.scene.objects.link(object)
 	
 	return object.name

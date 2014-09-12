@@ -121,7 +121,7 @@ def read_test(f,opts,count):
 
 def read_vertices_1(f):
 	vert_tup=struct.unpack('<3f',f.read(12))
-	return((vert_tup[0]/1000,-vert_tup[2]/1000,vert_tup[1]/1000)) 
+	return((vert_tup[0]/100,-vert_tup[2]/100,vert_tup[1]/100)) 
 
 def read_vertices_0(f):
 	vx=comp.decompress(struct.unpack('<H',f.read(2))[0])
