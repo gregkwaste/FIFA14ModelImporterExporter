@@ -1,6 +1,6 @@
 import struct,os,bpy,imp,bmesh,itertools,zlib,operator
 from mathutils import Vector,Euler,Matrix
-from math import radians,sqrt,degrees,acos
+from math import radians,sqrt,degrees,acos,atan2
 from random import randint
 from subprocess import call
 halfpath='fifa_tools\\scripts\\half.py'
@@ -68,10 +68,17 @@ def read_test(f,opts,count):
 	uvs_2=[]
 	uvs_3=[]
 	uvs_4=[]
-	bones_i=[]
+	bones_i0=[]
+	bones_i1=[]
 	bones_w=[]
 	bones_c=[]
 	
+	#Check Game Version
+	if bpy.context.scene.game_enum=='2':
+		bone_pad=('<4H',8)
+	else:
+		bone_pad=('<4B',4)
+		
 	print(opts)
 	for i in range(count):
 		uvcount=0
@@ -98,21 +105,22 @@ def read_test(f,opts,count):
 				colcount+=1
 				cols_1.append(read_cols(f))
 			elif j[0][0]=='i':
-				bones_i.append(struct.unpack('<8B',f.read(8)))
+				eval('bones_i'+str(j[0][1])+'.append(struct.unpack(bone_pad[0],f.read(bone_pad[1])))')
 			elif j[0][0]=='w':	
 				bones_w.append(struct.unpack('<4B',f.read(4)))
 			elif j[0][0]=='c':	
 				bones_c.append(struct.unpack('<4B',f.read(4)))
 				
 		
-	#STORE COLORS AND UVS
+	#STORE COLORS UVS AND BONES
 	for j in range(uvcount):
 		eval('uvs.append(uvs_'+str(j)+')')
 	for j in range(colcount):
 		eval('cols.append(cols_'+str(j)+')')
 		
+		
 	#print(verts)
-	return verts,cols,uvs,bones_i,bones_w   
+	return verts,cols,uvs,bones_i0,bones_w   
 		
 		
 	
@@ -624,19 +632,83 @@ def write_crowd_file(f,object):
 		
 		f.write(struct.pack('<H',0)) #Padding
 		
-		
+
+#Blender Transformation Matrix converting functions
+
+def vec_roll_to_mat3(vec, roll):
+    target = Vector((0,1,0))
+    nor = vec.normalized()
+    axis = target.cross(nor)
+    if axis.dot(axis) > 0.000001:
+        axis.normalize()
+        theta = target.angle(nor)
+        bMatrix = Matrix.Rotation(theta, 3, axis)
+    else:
+        updown = 1 if target.dot(nor) > 0 else -1
+        bMatrix = Matrix.Scale(updown, 3)
+    rMatrix = Matrix.Rotation(roll, 3, nor)
+    mat = rMatrix * bMatrix
+    return mat
+
+def mat3_to_vec_roll(mat):
+    vec = mat.col[1]
+    vecmat = vec_roll_to_mat3(mat.col[1], 0)
+    vecmatinv = vecmat.inverted()
+    rollmat = vecmatinv * mat
+    roll = atan2(rollmat[0][2], rollmat[2][2])
+    return vec, roll
+
+
 
 def read_bones(f,count):
 	temp=[]
 	
 	for k in range(count):
-		bones=Matrix()
-		bones=bones.to_4x4()
+		mat=Matrix()
+		mat=mat.to_4x4()
 		for i in range(4):
 			for j in range(4):
-				bones[j][i]=round(struct.unpack('<f',f.read(4))[0],8)
-		#print(bones)
-		temp.append(bones) 
+				mat[j][i]=round(struct.unpack('<f',f.read(4))[0],8)
+		
+		
+		#pos = mat.to_translation()
+		pos=Vector((mat[0][3],mat[1][3],mat[2][3]))
+		
+		if k in [2,3,4,324,333]:
+			print('Matrix ID= ',k)
+			#print(mat.to_euler())
+			#print(mat.to_scale())
+			print(pos)
+		
+		
+		rot = mat.to_euler()
+		
+		if not rot[0]==0:
+			sx=round(rot[0]/abs(rot[0]),1)
+		else:
+			sx=1.0
+		
+		if not rot[1]==0:
+			sy=round(rot[1]/abs(rot[1]),1)
+		else:
+			sy=1.0
+		
+		if not rot[2]==0:
+			sz=round(rot[2]/abs(rot[2]),1)
+		else:
+			sz=1.0
+		
+		
+		#Vector.rotate(pos,rot)
+		axis, roll = mat3_to_vec_roll(mat.to_3x3())
+		#pos = rot*pos
+		if k in [2,3,4,324,333]:
+			#print('Matrix ID= ',k)
+			#print(mat.to_euler())
+			#print(mat.to_scale())
+			print(sz)
+			print(pos)
+		temp.append((pos,pos+axis,roll)) #bone.head=pos, #bone.tail=pos+axis, #bone.roll=roll
 	return temp
 
 def read_string(f):

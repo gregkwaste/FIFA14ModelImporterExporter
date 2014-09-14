@@ -2,7 +2,7 @@ bl_info = {
 	"name": "FIFA 14 3D IMPORTER/EXPORTER",
 	"description": "RX3 Importer/Exporter",
 	"author": "arti-10",
-	"version": (0, 64,'beta'),
+	"version": (0, 65,'beta'),
 	"blender": (2, 67, 0),
 	"location": "View3D > Scene",
 	"warning": "", # used for warning icon and text in addons panel
@@ -10,14 +10,14 @@ bl_info = {
 	"tracker_url": "",
 	"category": "Import-Export"}
 
-version=(0,64)
+version=(0,65)
 import bpy,imp
 from bpy.props import *
 fifa_operators_path='fifa_tools\\scripts\\fifa_operators.py'
 fifa_operators=imp.load_source('fifa_operators',fifa_operators_path)
 from fifa_operators import light_props as light_props
 version_text='v'+str(version[0]) + '.' + str(version[1]) + ', made by arti-10'
-
+game_version=" 15 "
 
 
 
@@ -129,6 +129,7 @@ class Vertex_color_panel(bpy.types.Panel):
 		row=layout.row()
 		row.alignment='EXPAND'
 		row.label(text=version_text)
+		row.operator("system.visit_url_blog",text='Visit Official Website',emboss=False)
 		row.operator("system.visit_url",text='Visit Official Thread',emboss=False)
 
 class lights_panel(bpy.types.Panel):
@@ -218,10 +219,11 @@ class lights_panel(bpy.types.Panel):
 		row=layout.row()
 		row.alignment='EXPAND'
 		row.label(text=version_text)
+		row.operator("system.visit_url_blog",text='Visit Official Website',emboss=False)
 		row.operator("system.visit_url",text='Visit Official Thread',emboss=False)				
 		
 class FifaExporter(bpy.types.Panel):
-	bl_label='FIFA 14 3D Exporter'
+	bl_label='FIFA' + game_version + '3D Exporter'
 	bl_idname= 'FIFA_EXPORTER'
 	bl_space_type='PROPERTIES'
 	bl_region_type='WINDOW'
@@ -299,10 +301,11 @@ class FifaExporter(bpy.types.Panel):
 		row=layout.row()
 		row.alignment='EXPAND'
 		row.label(text=version_text)
+		row.operator("system.visit_url_blog",text='Visit Official Website',emboss=False)
 		row.operator("system.visit_url",text='Visit Official Thread',emboss=False)
 
 class FifaStadium_Tools(bpy.types.Panel):
-	bl_label='FIFA 14 Stadium Tools'
+	bl_label='FIFA' + game_version + 'Stadium Tools'
 	bl_idname= 'FIFA_STADIUM_TOOLS'
 	bl_space_type='PROPERTIES'
 	bl_region_type='WINDOW'
@@ -343,10 +346,11 @@ class FifaStadium_Tools(bpy.types.Panel):
 		row=layout.row()
 		row.alignment='EXPAND'
 		row.label(text=version_text)
+		row.operator("system.visit_url_blog",text='Visit Official Website',emboss=False)
 		row.operator("system.visit_url",text='Visit Official Thread',emboss=False)
 
 class FifaHelping_Tools(bpy.types.Panel):
-	bl_label='FIFA 14 Helping Tools'
+	bl_label='FIFA' + game_version + 'Helping Tools'
 	bl_idname= 'FIFA_HELPING_TOOLS'
 	bl_space_type='PROPERTIES'
 	bl_region_type='WINDOW'
@@ -374,11 +378,12 @@ class FifaHelping_Tools(bpy.types.Panel):
 		row=layout.row()
 		row.alignment='EXPAND'
 		row.label(text=version_text)
+		row.operator("system.visit_url_blog",text='Visit Official Website',emboss=False)
 		row.operator("system.visit_url",text='Visit Official Thread',emboss=False)
 		
 class FifaImporter(bpy.types.Panel):
 	"""Creates a Panel in Scene properties window"""
-	bl_label = "FIFA 14 3D Importer"
+	bl_label = "FIFA" + game_version + "3D Importer"
 	bl_idname = "FIFA_IMPORTER"
 	bl_space_type = 'PROPERTIES'
 	bl_region_type = 'WINDOW'
@@ -481,6 +486,7 @@ class FifaImporter(bpy.types.Panel):
 		row=layout.row()
 		row.alignment='EXPAND'
 		row.label(text=version_text)
+		row.operator("system.visit_url_blog",text='Visit Official Website',emboss=False)
 		row.operator("system.visit_url",text='Visit Official Thread',emboss=False)
 
 
@@ -608,7 +614,9 @@ name = 'Crowd Type')
 
 bpy.types.Scene.game_enum = bpy.props.EnumProperty(
 items = [('0','FIFA 14','FIFA 14'), 
-		('1','FIFA 13','FIFA 13')],
+		 ('1','FIFA 13','FIFA 13'),
+		 ('2','FIFA 15','FIFA 15')],
+default='2',		 
 name = "Game Version")
 
 bpy.types.Scene.bones_flag=bpy.props.BoolProperty(

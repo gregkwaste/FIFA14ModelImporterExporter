@@ -210,6 +210,15 @@ class visit_url(bpy.types.Operator) :
 		webbrowser.open(url='http://www.soccergaming.com/forums/showthread.php?p=3562558')
 		return{'FINISHED'}
 
+class visit_url(bpy.types.Operator) :
+	bl_idname = "system.visit_url_blog"
+	bl_label = ""
+	def invoke(self, context, event) :
+		webbrowser.open(url='http://3dgamedevblog.com')
+		return{'FINISHED'}
+
+		
+		
 class lights_export(bpy.types.Operator):
 	bl_idname='mesh.lights_export'
 	bl_label='EXPORT LIGHTS'
@@ -587,25 +596,24 @@ class file_import(bpy.types.Operator) :
 					except IndexError:
 						print('Index Not In Range')
 			
-			
-				
 			#BONE IMPORTING SECTION
 			if scn.bones_flag==True and len(f.bones)>0:
-				ivect=Vector((0,0,1,1))
-				count=0
-				#testmat=Matrix(((0,1,0,0),(-1,0,0,0),(0,0,1,0),(0,0,0,1)))
-				for i in range(len(f.bones)):
-					verts=[]
-					for j in range(3,len(f.bones[i])):
-						#print(matrix)
-						temp=f.bones[i][j]*f.bones[i][2]*f.bones[i][1]*f.bones[i][0]
-						#print(temp)
-						temp=temp*ivect
-						verts.append((temp[0],temp[1],temp[2]))
-					#print(verts)
-					fifa_main.createmesh(verts,[],[],'bones',count,f.id,'',[],False,[])
-					count+=1
-			
+				for arm_id in range(len(f.bones)):
+					amt=bpy.data.armatures.new('armature_'+str(f.id)+'_'+str(arm_id))
+					ob = bpy.data.objects.new('armature_object_'+str(arm_id), amt)
+					scn.objects.link(ob)
+					bpy.context.scene.objects.active = ob
+					bpy.ops.object.mode_set(mode='EDIT')
+					for i in range(len(f.bones[arm_id])):
+						bone = amt.edit_bones.new('mynewnewbone'+'_'+str(i))
+						bone.head,bone.tail,bone.roll=f.bones[arm_id][i]
+					bpy.ops.object.mode_set(mode='OBJECT')
+					ob.scale=Vector((0.01,0.01,0.01))
+					ob.rotation_euler[1]=1.5707972049713135
+				
+				
+				
+				
 			##PROPS IMPORTING SECTION
 			if scn.props_flag==True:
 				print('FOUND PROPS: ',len(f.props))
@@ -676,7 +684,8 @@ class file_import(bpy.types.Operator) :
 			f.type='crowd'
 			print('FILE TYPE DETECTED: ',f.type)
 			
-			fifa_main.read_crowds(f)	
+			
+			fifa_main.read_crowd_15(f) #READ CROWD FILE
 			f.data.close()
 			
 			
@@ -735,36 +744,65 @@ class file_import(bpy.types.Operator) :
 				
 			clog.close()
 			crowd_name=fifa_main.createmesh(crowd_verts,crowd_faces,[],f.type,0,f.id,'crowd',[],False,[])
-			fifa_func.crowd_col(crowd_name,crowd_col)
+			fifa_func.crowd_col(crowd_name,crowd_col) #Add the color layer
+			
 			
 			#Getting Crowd Types
-			for i in crowd_types:
-				if i[1]>=250:
-					empty.append(i[2][0])
-					empty.append(i[2][1])
-					empty.append(i[2][2])
-					empty.append(i[2][3])
-				elif i[0]<=10:
-					core_home.append(i[2][0])
-					core_home.append(i[2][1])
-					core_home.append(i[2][2])
-					core_home.append(i[2][3])
-				elif 10<=i[0]<=130:
-					casual_home.append(i[2][0])
-					casual_home.append(i[2][1])
-					casual_home.append(i[2][2])
-					casual_home.append(i[2][3])
-				elif 131<=i[0]<=180:
-					neutral.append(i[2][0])
-					neutral.append(i[2][1])
-					neutral.append(i[2][2])
-					neutral.append(i[2][3])
-				elif i[0]>=181:
-					away.append(i[2][0])
-					away.append(i[2][1])		
-					away.append(i[2][2])
-					away.append(i[2][3])
-							
+			if scn.game_enum=="2": #FIFA 15
+				for i in crowd_types:
+					if i[1]>=250:
+						away.append(i[2][0])
+						away.append(i[2][1])
+						away.append(i[2][2])
+						away.append(i[2][3])
+					elif i[0]<=10:
+						core_home.append(i[2][0])
+						core_home.append(i[2][1])
+						core_home.append(i[2][2])
+						core_home.append(i[2][3])
+					elif 10<=i[0]<=130:
+						casual_home.append(i[2][0])
+						casual_home.append(i[2][1])
+						casual_home.append(i[2][2])
+						casual_home.append(i[2][3])
+					elif 131<=i[0]<=180:
+						neutral.append(i[2][0])
+						neutral.append(i[2][1])
+						neutral.append(i[2][2])
+						neutral.append(i[2][3])
+					elif i[0]>=181:
+						empty.append(i[2][0])
+						empty.append(i[2][1])		
+						empty.append(i[2][2])
+						empty.append(i[2][3])
+			else: #FIFA 13/14	
+				for i in crowd_types:
+					if i[1]>=250:
+						empty.append(i[2][0])
+						empty.append(i[2][1])
+						empty.append(i[2][2])
+						empty.append(i[2][3])
+					elif i[0]<=10:
+						core_home.append(i[2][0])
+						core_home.append(i[2][1])
+						core_home.append(i[2][2])
+						core_home.append(i[2][3])
+					elif 10<=i[0]<=130:
+						casual_home.append(i[2][0])
+						casual_home.append(i[2][1])
+						casual_home.append(i[2][2])
+						casual_home.append(i[2][3])
+					elif 131<=i[0]<=180:
+						neutral.append(i[2][0])
+						neutral.append(i[2][1])
+						neutral.append(i[2][2])
+						neutral.append(i[2][3])
+					elif i[0]>=181:
+						away.append(i[2][0])
+						away.append(i[2][1])		
+						away.append(i[2][2])
+						away.append(i[2][3])
+						
 			
 			#Create and populate vertex groups
 			bpy.data.objects[crowd_name].vertex_groups.new('Core Home')
@@ -781,7 +819,8 @@ class file_import(bpy.types.Operator) :
 			bpy.data.objects[crowd_name].vertex_groups['Away'].add(away,1,'ADD')
 			
 			bpy.data.objects[crowd_name].scale=Vector((0.001,0.001,0.001))
-		
+			bpy.data.objects[crowd_name].rotation_euler[0]=radians(90)
+			
 		##IMPORT LNX FILE
 		if not scn.lnx_import_path=='':
 			
@@ -1465,8 +1504,14 @@ class remove_meshes(bpy.types.Operator):
 			if m.users==0:
 				bpy.data.lamps.remove(m)
 				count+=1
+		bcount=0
+		for m in bpy.data.armatures:
+			if m.users==0:
+				bpy.data.armatures.remove(m)
+				bcount+=1
 		
-		self.report({'INFO'},str(temp)+' Unused Meshes Removed And '+str(count)+' Unused Curves Removed '+str(lcount)+' Unused Lamps Removed')	
+		
+		self.report({'INFO'},str(temp)+' Unused Meshes Removed '+str(count)+' Unused Curves Removed '+str(lcount)+' Unused Lamps Removed '+str(bcount)+' Unused Armatures Removed')	
 		return {'FINISHED'}
 
 ###CLEAN ALL THE FILE PATHS IN THE SCRIPT###
@@ -1519,7 +1564,7 @@ class assign_materials(bpy.types.Operator):
 				continue
 			
 			
-			ident=obj.name.split(sep='_')[-1]
+			ident=obj.name.split(sep='.')[0].split(sep='_')[-1]
 			
 			if ident in dict:
 				try:

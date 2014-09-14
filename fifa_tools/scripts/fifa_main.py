@@ -5,12 +5,12 @@ from mathutils import Vector,Euler,Matrix
 halfpath='fifa_tools\\scripts\\half.py'
 half=imp.load_source('half',halfpath)
 comp=half.Float16Compressor()
-
+scn=bpy.context.scene
 
 def read_file_offsets(file,dir):
 	print('READING FILE OFFSETS...')
 	log=open('fifa_tools\\log.txt','w')
-	scn=bpy.context.scene
+	
 	
 	for offset in file.offsets:
 		if offset[0]==3263271920: #MESH DESCRIPTIONS
@@ -39,12 +39,10 @@ def read_file_offsets(file,dir):
 		elif offset[0]==5798132: #INDICES
 			if scn.trophy_flag==True:
 				temp=fifa_func.facereadstrip(file.data,offset[1],file.endian)
-				file.itable.append(temp[0])
-				file.indices_offsets.append((offset[1],temp[1]))
 			else:
 				temp=fifa_func.facereadlist(file.data,offset[1],file.endian)
-				file.itable.append(temp[0])
-				file.indices_offsets.append((offset[1],temp[1]))
+			file.itable.append(temp[0])
+			file.indices_offsets.append((offset[1],temp[1]))
 		elif offset[0]==3751472158: #BONES
 			log.write('Bones Detected')
 			file.data.seek(offset[1])
@@ -137,7 +135,7 @@ def read_mesh_descr(file,offset):
 
 
 def read_group(file,offset,endian):
-	scn=bpy.context.scene
+	
 	name='group_'+str(file.group_count)
 	#print(name)
 	file.data.seek(offset)
@@ -244,7 +242,6 @@ def read_texture(file,offset,endian,path):
 
 #Create Mesh and Object Function
 def createmesh(verts,faces,uvs,name,count,id,subname,colors,normal_flag,normals):
-	scn=bpy.context.scene
 	mesh=bpy.data.meshes.new("mesh"+str(count))
 	mesh.from_pydata(verts,[],faces)
 	
@@ -304,7 +301,7 @@ def createmesh(verts,faces,uvs,name,count,id,subname,colors,normal_flag,normals)
 	#if not name=='stadium': 
 		#object.scale=Vector((0.1,0.1,0.1))
 		#object.rotation_euler=Euler((1.570796251296997, -0.0, 0.0), 'XYZ')
-	bpy.context.scene.objects.link(object)
+	scn.objects.link(object)
 	
 	return object.name
 
@@ -430,7 +427,7 @@ def read_prop_positions(file,offset):
 	file.prop_positions.append((0.001*temp[0],-0.001*temp[2],0.001*temp[1]))
 	file.prop_rotations.append((rot[0],rot[1],rot[2]))
   
-def read_crowds(file):
+def read_crowd_14(file):
 	print('READING CROWD FILE')
 	header=file.data.read(4).decode('utf-8')
 	if not header=='CRWD':
@@ -439,6 +436,9 @@ def read_crowds(file):
 	file.data.read(2)
 	count=struct.unpack('<H',file.data.read(2))[0]
 	print(count)
+	
+	
+	
 	for i in range(count):
 		file.data.read(2)
 		#COORDINATES
@@ -468,13 +468,64 @@ def read_crowds(file):
 		
 		c_status=struct.unpack('<B',file.data.read(1))[0]
 		c_attendance=struct.unpack('<B',file.data.read(1))[0]
-		ha=struct.unpack('<3B',file.data.read(3))
-		set1=struct.unpack('I',file.data.read(4))
-		set2=struct.unpack('I',file.data.read(4))
-		set3=struct.unpack('I',file.data.read(4))
-		set4=struct.unpack('I',file.data.read(4))
+		#ha=struct.unpack('<3B',file.data.read(3)) #skipping
+		#set1=struct.unpack('I',file.data.read(4))
+		#set2=struct.unpack('I',file.data.read(4))
+		#set3=struct.unpack('I',file.data.read(4))
+		#set4=struct.unpack('I',file.data.read(4))
 		
 		file.crowd.append((verts,zrot,c_status,c_attendance,colorrgb,color,set1,set2,set3,set4))
+
+def read_crowd_15(file):
+	print('READING CROWD FILE')
+	header=file.data.read(4).decode('utf-8')
+	if not header=='CRWD':
+		print('NOT A VALID CROWD FILE')
+		return
+	file.data.read(2)
+	count=struct.unpack('<H',file.data.read(2))[0]
+	print(count)
+	t=open('crowd_log.txt','w')
+	
+	if scn.game_enum=="2":
+		skip=9
+	else:
+		skip=19
+		
+	for i in range(count):
+		file.data.read(2)
+		#COORDINATES
+		verts=struct.unpack('<3f',file.data.read(12))
+		#verts=(verts[0],-verts[2],verts[1])
+		
+		#ZROTATION
+		zrot=struct.unpack('<f',file.data.read(4))[0]  
+		
+		#Color
+		rawr=struct.unpack('<B',file.data.read(1))[0]   
+		rawg=struct.unpack('<B',file.data.read(1))[0]
+		rawb=struct.unpack('<B',file.data.read(1))[0]
+
+		r=hex(rawr)[2:]
+		g=hex(rawg)[2:]
+		b=hex(rawb)[2:]
+		color='#'+str(r)+str(g)+str(b)
+		
+		r=float(rawr/255)
+		g=float(rawg/255)
+		b=float(rawb/255)
+		colorrgb=(r,g,b)
+		#print(colorrgb) 
+		#print(color)
+		#   file.data.read(1)
+		
+		
+		c_status=struct.unpack('<B',file.data.read(1))[0]
+		c_attendance=struct.unpack('<B',file.data.read(1))[0]
+		t.write(str(c_status)+'       '+str(file.data.read(skip))+'\n')
+		file.crowd.append((verts,zrot,c_status,c_attendance,colorrgb,color))
+	t.close()
+
 		
 		
 def read_collision(file,offset):
@@ -543,7 +594,7 @@ class file:
 			
 
 def file_init(path):
-	scn=bpy.context.scene
+	
 	f=file(path)
 	f.id=path.split(sep='\\')[-1].split(sep='_')[1].split(sep='.')[0]
 	
@@ -612,7 +663,7 @@ def write_offsets(offset_list,data_pass,object_list,material_list,materials_dict
 	group_count=len(group_list)
 	prop_count=len(prop_list)
 	collision_count=len(collision_list)
-	scn=bpy.context.scene
+	
 	#offset_list format: IDENTIFIER  OFFSET   SIZE	ID
 	if data_pass==0:
 		offset_list.append([582139446,0,0])
