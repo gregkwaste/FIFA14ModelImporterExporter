@@ -5,9 +5,10 @@ from mathutils import Vector,Euler,Matrix
 halfpath='fifa_tools\\scripts\\half.py'
 half=imp.load_source('half',halfpath)
 comp=half.Float16Compressor()
-scn=bpy.context.scene
+
 
 def read_file_offsets(file,dir):
+	scn=bpy.context.scene
 	print('READING FILE OFFSETS...')
 	log=open('fifa_tools\\log.txt','w')
 	
@@ -135,7 +136,7 @@ def read_mesh_descr(file,offset):
 
 
 def read_group(file,offset,endian):
-	
+	scn=bpy.context.scene
 	name='group_'+str(file.group_count)
 	#print(name)
 	file.data.seek(offset)
@@ -242,6 +243,7 @@ def read_texture(file,offset,endian,path):
 
 #Create Mesh and Object Function
 def createmesh(verts,faces,uvs,name,count,id,subname,colors,normal_flag,normals):
+	scn=bpy.context.scene
 	mesh=bpy.data.meshes.new("mesh"+str(count))
 	mesh.from_pydata(verts,[],faces)
 	
@@ -477,6 +479,7 @@ def read_crowd_14(file):
 		file.crowd.append((verts,zrot,c_status,c_attendance,colorrgb,color,set1,set2,set3,set4))
 
 def read_crowd_15(file):
+	scn=bpy.context.scene
 	print('READING CROWD FILE')
 	header=file.data.read(4).decode('utf-8')
 	if not header=='CRWD':
@@ -663,6 +666,7 @@ def write_offsets(offset_list,data_pass,object_list,material_list,materials_dict
 	group_count=len(group_list)
 	prop_count=len(prop_list)
 	collision_count=len(collision_list)
+	scn=bpy.context.scene
 	
 	#offset_list format: IDENTIFIER  OFFSET   SIZE	ID
 	if data_pass==0:
