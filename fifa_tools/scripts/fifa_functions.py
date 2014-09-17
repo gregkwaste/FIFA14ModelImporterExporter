@@ -76,12 +76,6 @@ def read_test(f,opts,count):
 	bones_w=[]
 	bones_c=[]
 	
-	#Check Game Version
-	if bpy.context.scene.game_enum=='2':
-		bone_pad=('<4H',8)
-	else:
-		bone_pad=('<4B',4)
-		
 	print(opts)
 	for i in range(count):
 		uvcount=0
@@ -108,7 +102,10 @@ def read_test(f,opts,count):
 				colcount+=1
 				cols_1.append(read_cols(f))
 			elif j[0][0]=='i':
-				eval('bones_i'+str(j[0][1])+'.append(struct.unpack(bone_pad[0],f.read(bone_pad[1])))')
+				if j[4]=='4u8':
+					eval('bones_i'+str(j[0][1])+'.append(struct.unpack(\'<4B\',f.read(4)))')
+				elif j[4]=='4u16':
+					eval('bones_i'+str(j[0][1])+'.append(struct.unpack(\'<4H\',f.read(8)))')
 			elif j[0][0]=='w':	
 				bones_w.append(struct.unpack('<4B',f.read(4)))
 			elif j[0][0]=='c':	
@@ -143,7 +140,7 @@ def read_vertices_0(f):
 	hx=struct.unpack('f',struct.pack('I',vx))[0]
 	hy=struct.unpack('f',struct.pack('I',vy))[0]
 	hz=struct.unpack('f',struct.pack('I',vz))[0]
-	return((hx,hy,hz))  
+	return((hx/100,-hz/100,hy/100))  
 
 def read_uvs_1(f):
 	return(struct.unpack('<2f',f.read(8)))
@@ -230,7 +227,7 @@ def facereadstrip(f,offset,endian):
 	#print(faces)   
 	return faces,indiceslength
 
-def convert_mesh(object,mode):
+def convert_mesh_init(object,mode):
 	
 	scn=bpy.context.scene
 	verts=[]
@@ -243,15 +240,6 @@ def convert_mesh(object,mode):
 	bm=bmesh.new()
 	bm.from_mesh(data)
 	bm.normal_update()
-	
-	#Matrices
-	object_matrix_wrld=object.matrix_world
-	#else:
-	rot_x_mat=Matrix.Rotation(radians(-90),4,'X')
-	if scn.trophy_export_flag:
-		scale_mat=Matrix.Scale(1,4)
-	else:
-		scale_mat=Matrix.Scale(1000,4)
 	
 	##STORE TRANSFORMATION
 	if mode==0:
@@ -312,6 +300,15 @@ def convert_mesh(object,mode):
 		col_1=[]
 		col_2=[]
 		id=0
+		
+		#Matrices
+		object_matrix_wrld=object.matrix_world
+		rot_x_mat=Matrix.Rotation(radians(-90),4,'X')
+		if scn.trophy_export_flag:
+			scale_mat=Matrix.Scale(100,4)
+		else:
+			scale_mat=Matrix.Scale(100,4)
+		
 		#Forced to Use Old Way for N-gons
 		
 		
@@ -386,7 +383,7 @@ def convert_mesh(object,mode):
 		return len(verts),verts,len(uvs),uvs,len(indices)*3,indices,cols
 
 		
-def convert_original_mesh(object):
+def convert_original_mesh_to_data(object):
 	verts=[];uvs=[];indices=[];cols=[]
 	data=object.data
 	bm=bmesh.new()
@@ -475,33 +472,32 @@ def convert_mesh_collisions(object):
 	
 
 def convert_mesh_to_bytes(f,opts,count,verts,uvs,cols):
-	
-	
-	#print(opts)
 	for i in range(count):
 		for o in opts:
-			if o[0]=='p':
+			if o[0]=='p': #verts
 				if o[3:]=='4f16':
 					write_half_verts(f,verts[i])
 				else:
 					f.write(struct.pack('<3f',round(verts[i][0],8),round(verts[i][1],8),round(verts[i][2],8)))
-			elif o[0]=='n':
+			elif o[0]=='n': #col0
 				col=(int(cols[0][i][0])<<20) + (int(cols[0][i][1])<<10) + (int(cols[0][i][2]))
 				f.write(struct.pack('<I',col))
-			elif o[0]=='g':
+			elif o[0]=='g': #col1
 				col=(int(cols[1][i][0])<<20) + (int(cols[1][i][1])<<10) + (int(cols[1][i][2]))
 				f.write(struct.pack('<I',col))
-			elif o[0]=='b':
+			elif o[0]=='b': #col2
 				col=(int(cols[2][i][0])<<20) + (int(cols[2][i][1])<<10) + (int(cols[2][i][2]))
 				f.write(struct.pack('<I',col))	
-			elif o[0]=='t':
-				#UV SECTION
+			elif o[0]=='t': #uvs
 				huvx=eval('comp.compress(round(uvs[int(o[1])][i][0],8))')
 				huvy=eval('comp.compress(round(uvs[int(o[1])][i][1],8))')
 				f.write(struct.pack('<HH',huvx,huvy))
-			elif o[0]=='i':
-				f.read(4)
-			elif o[0]=='w':
+			elif o[0]=='i': #bone indices
+				if o[3:]=='4u8':
+					f.read(4)
+				elif o[3:]=='4u16':
+					f.read(8)
+			elif o[0]=='w': #bone weights
 				f.read(4)	
 				
 

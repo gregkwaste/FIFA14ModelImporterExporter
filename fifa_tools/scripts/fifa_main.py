@@ -1,9 +1,11 @@
 import bpy,imp,os,struct,bmesh,zlib
 fifa_func_path='fifa_tools\\scripts\\fifa_functions.py'
 fifa_func=imp.load_source('fifa_func',fifa_func_path)
+#fifa_func=imp.load_compiled('fifa_func','fifa_tools\\scripts\\fifa_functions.pyc')
 from mathutils import Vector,Euler,Matrix
 halfpath='fifa_tools\\scripts\\half.py'
-half=imp.load_source('half',halfpath)
+#half=imp.load_source('half',halfpath)
+half=imp.load_compiled('half','fifa_tools\\scripts\\half.pyc')
 comp=half.Float16Compressor()
 
 
@@ -429,7 +431,7 @@ def read_prop_positions(file,offset):
 	file.prop_positions.append((0.001*temp[0],-0.001*temp[2],0.001*temp[1]))
 	file.prop_rotations.append((rot[0],rot[1],rot[2]))
   
-def read_crowd_14(file):
+def read_crowd_14(file): #NOT USED
 	print('READING CROWD FILE')
 	header=file.data.read(4).decode('utf-8')
 	if not header=='CRWD':
@@ -556,12 +558,12 @@ class file:
 		
 		self.path   =path
 		self.data   =0
-		self.offsets =[]
+		self.offsets =[] #file offset list
 		self.mesh_offsets=[]
 		self.indices_offsets=[]
-		self.size   =''
+		self.size   ='' #file size text
 		self.count   =0
-		self.mesh_count   =0
+		self.mesh_count   =0 #total meshes in the file
 		self.texture_count   =0
 		self.mesh_descrs=[]
 		self.vxtable	=[]
@@ -574,9 +576,9 @@ class file:
 		self.bboxtable=[]
 		self.uvs   =[]
 		self.uvcount= []
-		self.container_type =''
-		self.endianess  =''
-		self.endian=''
+		self.container_type ='' #file header
+		self.endianess  ='' #endianess text
+		self.endian='' #endianness identifier
 		self.bones=[]
 		self.props=[]
 		self.prop_positions=[]
@@ -585,12 +587,12 @@ class file:
 		self.tex_names=[]
 		self.sub_names=[]
 		self.group_names=[]
-		self.type=''
+		self.type='' #file model type
 		self.group_count=0
 		self.materials=[]
 		self.material_count=0
 		self.mat_assign_table=[]
-		self.id=0
+		self.id=0 #file id
 		self.crowd=[]
 		self.collisions=[]
 
@@ -617,13 +619,6 @@ def file_init(path):
 			for i in range(sec_num):
 				#Uniform the offset
 				f.data.read(f.data.tell() % 4)
-				#unified=False
-				# while unified==False:
-					# if hex(f.data.tell())[-1] in ['0','4','8','C']:
-						# unified=True
-					# else:
-						# f.data.read(1)
-				
 				#find sec length
 				sec_found=False
 				while sec_found==False:
@@ -638,7 +633,6 @@ def file_init(path):
 				
 			t.close()
 			f.data=open(t.name,'rb')
-		
 		
 		f.data.seek(8)
 		original_size=struct.unpack('<I',f.data.read(4))[0]

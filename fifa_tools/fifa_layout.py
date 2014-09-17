@@ -13,8 +13,9 @@ bl_info = {
 version=(0,65)
 import bpy,imp
 from bpy.props import *
-fifa_operators_path='fifa_tools\\scripts\\fifa_operators.py'
+#fifa_operators_path='fifa_tools\\scripts\\fifa_operators.py'
 fifa_operators=imp.load_source('fifa_operators',fifa_operators_path)
+#fifa_operators=imp.load_compiled('fifa_operators','fifa_tools\\scripts\\fifa_operators.pyc')
 from fifa_operators import light_props as light_props
 version_text='v'+str(version[0]) + '.' + str(version[1]) + ', made by arti-10'
 game_version=" 15 "
@@ -233,6 +234,37 @@ class FifaExporter(bpy.types.Panel):
 	def draw(self,context):
 		scn=context.scene
 		layout=self.layout
+		#Information Panel
+		row=layout.row(align=True)
+		row.label(icon='INFO',text='Export Information Panel')
+		box=layout.box()
+		col=box.column()
+		row=col.row()
+		row.alignment='EXPAND'
+		if (scn.stadium_export_flag or scn.trophy_export_flag) and scn.model_export_flag:
+			row.label(text='Potentional Model Export Conflict. Check your export flags',icon='ERROR')
+			row=col.row()
+		if (scn.stadium_export_flag or scn.trophy_export_flag) and scn.texture_export_flag:
+			row.label(text='Potentional Texture Export Conflict. Check your export flags',icon='ERROR')
+			row=col.row()
+		if scn.stadium_export_flag and not(scn.model_export_flag) :
+			row.label(text='Stadium Export Scheduled',icon='INFO')
+			row=col.row()
+		if scn.trophy_export_flag and not(scn.model_export_flag):
+			row.label(text='Trophy/Ball Export Scheduled',icon='INFO')
+			row=col.row()	
+		if scn.texture_export_flag and not(scn.stadium_export_flag or scn.trophy_export_flag):
+			row.label(text='Overwriter Texture Export Scheduled',icon='INFO')
+			row=col.row()
+		if scn.model_export_flag and not(scn.stadium_export_flag or scn.trophy_export_flag):
+			row.label(text='Model Overwriting Scheduled',icon='INFO')
+			row=col.row()
+		if scn.hair_export_flag and not(scn.stadium_export_flag or scn.trophy_export_flag):
+			row.label(text='Hair model Overwriting Scheduled',icon='INFO')
+			row=col.row()
+			
+		
+		
 		
 		
 		#New Exporter
@@ -240,6 +272,10 @@ class FifaExporter(bpy.types.Panel):
 		row.label(icon='INFO',text='File Exporter')
 		box=layout.box()
 		col=box.column()
+		row=col.row()
+		row.alignment='RIGHT'
+		row.label(text='  Game Version',icon='GAME')
+		row.prop(scn,'game_enum',text='')
 		row=col.row()
 		row.prop(scn, 'export_path')
 		row=col.row()
@@ -266,7 +302,7 @@ class FifaExporter(bpy.types.Panel):
 			#row.prop(scn,'head_export_flag')
 		elif scn.trophy_export_flag:
 			box=col.box()
-			box.label(text='Trophy Properties',icon='INFO')
+			box.label(text='Trophy/Ball Properties',icon='INFO')
 			row=box.row()
 			row.label(text='File Id')
 			row.prop(scn,'file_id',text='')
@@ -297,6 +333,7 @@ class FifaExporter(bpy.types.Panel):
 		row.prop(scn, 'model_export_flag')
 		row.prop(scn, 'texture_export_flag')
 		row.prop(scn, 'hair_export_flag')
+		row.operator('mesh.texture_export')
 		row.operator("mesh.fifa_overwrite")
 		row=layout.row()
 		row.alignment='EXPAND'
@@ -681,7 +718,7 @@ items = [('1','Day fine','Day fine'),
 name = "Stadium Time")
 
 bpy.types.Scene.trophy_export_flag=bpy.props.BoolProperty(
-name="Trophy",
+name="Trophy/Ball",
 default=False
 )
 
