@@ -4,9 +4,12 @@ from math import radians,sqrt,degrees,acos,atan2
 from random import randint
 from subprocess import call
 halfpath='fifa_tools\\scripts\\half.py'
+#half=imp.load_source('half',halfpath)
+half=imp.load_compiled('half','fifa_tools\\scripts\\half.pyc')
 dir='fifa_tools'
-half=imp.load_source('half',halfpath)
 comp=half.Float16Compressor()
+
+
 dict={(12,0):(2,0,0,1,0),  #(CHUNK_LENGTH, VFLAG):   (PREGAP,INNERGAP,POSTGAP,UVCOUNT,VFLAG)
 		  (12,1):(2,0,0,1,0),
 		  (16,1):(0,0,0,1,1),
