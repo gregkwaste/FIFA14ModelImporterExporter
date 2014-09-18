@@ -1,5 +1,5 @@
 bl_info = {
-	"name": "FIFA 14 3D IMPORTER/EXPORTER",
+	"name": "FIFA 15 3D IMPORTER/EXPORTER",
 	"description": "RX3 Importer/Exporter",
 	"author": "arti-10",
 	"version": (0, 65,'beta'),

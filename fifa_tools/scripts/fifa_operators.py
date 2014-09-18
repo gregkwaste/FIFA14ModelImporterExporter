@@ -645,7 +645,7 @@ class file_import(bpy.types.Operator) :
 				collisioncount=0
 				for collision in f.collisions:
 					obname=fifa_main.createmesh(collision[1],collision[2],[],collision[0],collisioncount,f.id,'',[],False,[])
-					bpy.data.objects[obname].scale=Vector((0.001,0.001,0.001))
+					#bpy.data.objects[obname].scale=Vector((0.01,0.01,0.01))
 					collisioncount+=1
 			
 			

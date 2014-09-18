@@ -174,7 +174,7 @@ def read_group_names(file,offset):
 	file.data.seek(offset)
 	file.data.read(16)
 	group_name=fifa_func.read_string(file.data)
-	print(group_name)
+	#print(group_name)
 	file.group_names.append(group_name) 
 
 #Create Texture Function	
@@ -428,7 +428,7 @@ def read_prop_positions(file,offset):
 	file.data.read(4)
 	temp=struct.unpack('<3f',file.data.read(12))
 	rot=struct.unpack('<3f',file.data.read(12))
-	file.prop_positions.append((0.001*temp[0],-0.001*temp[2],0.001*temp[1]))
+	file.prop_positions.append((0.01*temp[0],-0.01*temp[2],0.01*temp[1]))
 	file.prop_rotations.append((rot[0],rot[1],rot[2]))
   
 def read_crowd_14(file): #NOT USED
@@ -531,8 +531,8 @@ def read_crowd_15(file):
 		file.crowd.append((verts,zrot,c_status,c_attendance,colorrgb,color))
 	t.close()
 
-		
-		
+	
+	
 def read_collision(file,offset):
 	file.data.seek(offset)
 	file.data.read(16)
@@ -543,10 +543,9 @@ def read_collision(file,offset):
 	verts=[]
 	j=0 #COUNTER FOR INDICES
 	for i in range(triscount):
-		#3 VERTICES
-		verts.append(struct.unpack('<3f',file.data.read(12)))
-		verts.append(struct.unpack('<3f',file.data.read(12)))
-		verts.append(struct.unpack('<3f',file.data.read(12)))   
+		for k in range(3): #3 VERTICES
+			temp=struct.unpack('<3f',file.data.read(12))
+			verts.append((temp[0]/100,-temp[2]/100,temp[1]/100))
 		# TRIANGLE DEFINITION
 		indices.append((j,j+1,j+2))
 		j+=3
