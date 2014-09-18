@@ -13,7 +13,7 @@ bl_info = {
 version=(0,65)
 import bpy,imp
 from bpy.props import *
-#fifa_operators_path='fifa_tools\\scripts\\fifa_operators.py'
+fifa_operators_path='fifa_tools\\scripts\\fifa_operators.py'
 fifa_operators=imp.load_source('fifa_operators',fifa_operators_path)
 #fifa_operators=imp.load_compiled('fifa_operators','fifa_tools\\scripts\\fifa_operators.pyc')
 from fifa_operators import light_props as light_props
@@ -241,48 +241,61 @@ class FifaExporter(bpy.types.Panel):
 		col=box.column()
 		row=col.row()
 		row.alignment='EXPAND'
-		if (scn.stadium_export_flag or scn.trophy_export_flag) and scn.model_export_flag:
-			row.label(text='Potentional Model Export Conflict. Check your export flags',icon='ERROR')
+		
+		#Error Prompts
+		if (scn.stadium_export_flag and scn.trophy_export_flag):
+			row.label(text='Potentional Model Export Conflict.',icon='ERROR') 
 			row=col.row()
-		if (scn.stadium_export_flag or scn.trophy_export_flag) and scn.texture_export_flag:
-			row.label(text='Potentional Texture Export Conflict. Check your export flags',icon='ERROR')
-			row=col.row()
-		if scn.stadium_export_flag and not(scn.model_export_flag) :
-			row.label(text='Stadium Export Scheduled',icon='INFO')
-			row=col.row()
-		if scn.trophy_export_flag and not(scn.model_export_flag):
-			row.label(text='Trophy/Ball Export Scheduled',icon='INFO')
-			row=col.row()	
-		if scn.texture_export_flag and not(scn.stadium_export_flag or scn.trophy_export_flag):
-			row.label(text='Overwriter Texture Export Scheduled',icon='INFO')
-			row=col.row()
-		if scn.model_export_flag and not(scn.stadium_export_flag or scn.trophy_export_flag):
-			row.label(text='Model Overwriting Scheduled',icon='INFO')
-			row=col.row()
-		if scn.hair_export_flag and not(scn.stadium_export_flag or scn.trophy_export_flag):
-			row.label(text='Hair model Overwriting Scheduled',icon='INFO')
+			row.label(text='Check your export flags',icon='ERROR')
 			row=col.row()
 			
+		if (scn.stadium_export_flag or scn.trophy_export_flag) and (scn.face_edit_flag or scn.gen_overwriter_flag):
+			row.label(text='Exporting and Overwriting enabled. Potential Model Export Conflict.',icon='ERROR')
+			row=col.row()
+			row.label(text='Check your export flags.',icon='ERROR')
+			row=col.row()
+			
+		if (scn.face_edit_flag and scn.gen_overwriter_flag):
+			row.label(text='Potentional Overwriter Conflict.',icon='ERROR') 
+			row=col.row()
+			row.label(text='Check your export flags',icon='ERROR')
+			row=col.row()
 		
-		
+		#Valid Notifications
+		if scn.stadium_export_flag and not(scn.trophy_export_flag or scn.gen_overwriter_flag or scn.face_edit_flag):
+			row.label(text='Stadium Export Scheduled',icon='INFO')
+			row=col.row()
+			
+		if scn.trophy_export_flag and not (scn.stadium_export_flag or scn.gen_overwriter_flag or scn.face_edit_flag):
+			row.label(text='Trophy/Ball Export Scheduled',icon='INFO')
+			row=col.row()	
+		if scn.face_edit_flag and not (scn.stadium_export_flag or scn.gen_overwriter_flag or scn.trophy_export_flag):
+			row.label(text='Face Editing Mode Enabled',icon='INFO')
+			row=col.row()
+		if scn.gen_overwriter_flag and not (scn.face_edit_flag or scn.stadium_export_flag or scn.trophy_export_flag):
+			row.label(text='General Overwriting Mode Enabled',icon='INFO')
+			row=col.row()
 		
 		
 		#New Exporter
 		row=layout.row(align=True)
-		row.label(icon='INFO',text='File Exporter')
+		row.label(icon='INFO',text="File Exporter")
 		box=layout.box()
 		col=box.column()
 		row=col.row()
 		row.alignment='RIGHT'
 		row.label(text='  Game Version',icon='GAME')
 		row.prop(scn,'game_enum',text='')
-		row=col.row()
-		row.prop(scn, 'export_path')
+		
 		row=col.row()
 		row.scale_y=1.2
 		row.alignment='EXPAND'
 		row.prop(scn,'stadium_export_flag')
 		row.prop(scn,'trophy_export_flag')
+		
+		row=col.row()
+		row.prop(scn, 'export_path')
+		
 		if scn.stadium_export_flag:
 			
 			box=col.box()
@@ -299,7 +312,6 @@ class FifaExporter(bpy.types.Panel):
 			split.scale_x=1.5
 			split.label(text='File Id')
 			split.prop(scn,'file_id',text='')
-			#row.prop(scn,'head_export_flag')
 		elif scn.trophy_export_flag:
 			box=col.box()
 			box.label(text='Trophy/Ball Properties',icon='INFO')
@@ -326,15 +338,43 @@ class FifaExporter(bpy.types.Panel):
 		row.label(icon='INFO',text='File Overwriter')
 		box=layout.box()
 		col=box.column()
-		row=col.row()
-		row.prop(scn, 'export_path')
+		
 		row=col.row()
 		row.scale_y=1.2
-		row.prop(scn, 'model_export_flag')
-		row.prop(scn, 'texture_export_flag')
-		row.prop(scn, 'hair_export_flag')
+		row.prop(scn, 'gen_overwriter_flag')
+		row.prop(scn, 'face_edit_flag')
+		if scn.face_edit_flag:
+			box=col.box()
+			box.label(text='Face Editing Options',icon='INFO')
+			col1=box.column()
+			row=col1.row()
+			row.alignment='EXPAND'
+			row.prop(scn,'face_edit_head_flag')
+			row.prop(scn,'face_edit_hair_flag')
+		elif scn.gen_overwriter_flag:
+			box=col.box()
+			box.label(text='General Overwriting Options',icon='INFO')
+			col1=box.column()
+			row=col1.row()
+			row.alignment='EXPAND'
+			row.prop(scn,'trophy_flag')
+			
+		
+		row=col.row()
+		row.prop(scn, 'export_path')
+		
+		row=col.row()
 		row.operator('mesh.texture_export')
-		row.operator("mesh.fifa_overwrite")
+		
+		if scn.face_edit_flag:
+			txt="FACE EXPORT"
+		else:
+			txt="OVERWRITE"
+		
+		row.operator("mesh.fifa_overwrite",text=txt)
+		
+		
+		
 		row=layout.row()
 		row.alignment='EXPAND'
 		row.label(text=version_text)
@@ -689,7 +729,7 @@ default=False
 )
 bpy.types.Scene.trophy_flag=bpy.props.BoolProperty(
 name="Indices Method",
-description='If the vertices show up correctly but the faces are screwed, check/uncheck that and reimport',
+description='If the vertices show up correctly but the faces are screwed, check/uncheck that and reimport. When using the overwriter, leave it as it would be when the model was imported correctly.',
 default=False
 )
 #EXPORT PROPERTIES
@@ -724,22 +764,23 @@ default=False
 
 
 #OVERWRITE PROPERTIES
-bpy.types.Scene.head_export_flag=bpy.props.BoolProperty(
-name="Head/Hair",
+bpy.types.Scene.gen_overwriter_flag=bpy.props.BoolProperty(
+name="General Overwriting Mode",
 default=False
 )
-bpy.types.Scene.model_export_flag=bpy.props.BoolProperty(
-name="Model",
+bpy.types.Scene.face_edit_flag=bpy.props.BoolProperty(
+name="Face Editing Mode",
 default=False
 )
-bpy.types.Scene.texture_export_flag=bpy.props.BoolProperty(
-name="Texture",
+bpy.types.Scene.face_edit_head_flag=bpy.props.BoolProperty(
+name="Head Model",
 default=False
 )
-bpy.types.Scene.hair_export_flag=bpy.props.BoolProperty(
-name="Hair",
+bpy.types.Scene.face_edit_hair_flag=bpy.props.BoolProperty(
+name="Hair Model",
 default=False
 )
+
 bpy.types.Scene.export_path=bpy.props.StringProperty(
 name="Export Directory",
 subtype='DIR_PATH'

@@ -7,7 +7,7 @@ halfpath='fifa_tools\\scripts\\half.py'
 #half=imp.load_source('half',halfpath)
 half=imp.load_compiled('half','fifa_tools\\scripts\\half.pyc')
 comp=half.Float16Compressor()
-
+sig='FIFA 3D Importer/Exporter, made by arti. v0.65. All rights reserved.©'
 
 def read_file_offsets(file,dir):
 	scn=bpy.context.scene
@@ -295,7 +295,9 @@ def createmesh(verts,faces,uvs,name,count,id,subname,colors,normal_flag,normals)
 	
 	
 	if name.split(sep='_')[0]=='head':
-		object=bpy.data.objects.new(name+'_'+str(id)+'_'+str(count)+'_'+subname.split(sep='_')[0],mesh)
+		object=bpy.data.objects.new(name+'_'+str(id)+'_'+str(count)+'_'+subname,mesh)
+	elif name.split(sep='_')[0]=='stadium':
+		object=bpy.data.objects.new(subname,mesh)
 	else:
 		object=bpy.data.objects.new(name+'_'+str(id)+'_'+str(count),mesh)
 	
@@ -374,12 +376,10 @@ def create_material(f,offset,count):
 
 
 def read_props(file,offset,endian):
-	
 	file.data.seek(offset)
 	file.data.read(4)
 	count=struct.unpack(endian+'i',file.data.read(4))[0]
 	file.data.read(8)
-	
 	print('READING PROPS', 'COUNT: ',count)
 	
 	if file.type.endswith('_texture'):
@@ -403,13 +403,13 @@ def read_props(file,offset,endian):
 			except FileExistsError:
 			    print('!!!File Exists!!!')   
 			    file.tex_names[i]=text+'.dds'
-			
-			
+	
 	else:
 		for i in range(count):
 			off=struct.unpack(endian+'I',file.data.read(4))[0]
 			textlen=struct.unpack(endian+'I',file.data.read(4))[0]
 			text=''
+			#text=fifa_func.read_string(file.data)
 			for j in range(textlen):
 				text=text+chr(struct.unpack(endian+'B',file.data.read(1))[0]) 
 			text=text[0:-1] 
@@ -419,10 +419,11 @@ def read_props(file,offset,endian):
 				file.props.append(text)
 				file.prop_count+=1  
 			elif off==3566041216:
-				file.sub_names.append(text)
+				#print(text,textlen)
+				file.sub_names.append(text.split(sep='.')[0].split(sep='_')[0])
 			elif off==2047566042:
 				file.tex_names.append(text+'.dds')  
-		
+
 def read_prop_positions(file,offset):
 	file.data.seek(offset)
 	file.data.read(4)
@@ -598,17 +599,20 @@ class file:
 			
 
 def file_init(path):
-	
+	scn=bpy.context.scene
 	f=file(path)
-	f.id=path.split(sep='\\')[-1].split(sep='_')[1].split(sep='.')[0]
+	name=path.split(sep='\\')[-1].split(sep='.')[0]
+	f.id=name.split('_')[1]
+	f.type=name.split(sep='_')[0]
 	
 	print('-------------------------------------------------------------------------------')
 	print('FILE INITIALIZATION')
 	print('FILE PATH: ',f.path)
+	print('FILE TYPE: ',f.type)
 	print('FILE ID:',f.id)
 	
 	try:
-		f.data=open(f.path,'rb')
+		f.data=open(f.path,'r+b')
 		if str(f.data.read(8))[2:-1]=='chunkzip':
 			
 			t=open('fifa_tools\\'+f.path.split(sep='\\')[-1]+'.decompressed','wb')
@@ -628,17 +632,20 @@ def file_init(path):
 				f.data.read(4) #Skip 00 00 00 01
 				
 				data=f.data.read(sec_len)  #Store part  
-				t.write(zlib.decompress(data,-15))
+				try:
+					t.write(zlib.decompress(data,-15))
+				except zlib.error:
+					return 'corrupt_file'
 				
 			t.close()
-			f.data=open(t.name,'rb')
+			f.data=open(t.name,'r+b')
 		
 		f.data.seek(8)
 		original_size=struct.unpack('<I',f.data.read(4))[0]
 		f_size=len(f.data.read())+12
 		
 		#Clopy Checking
-		if not original_size==f_size and path.split(sep='.')[-1]=='rx3' and path.split(sep='\\')[-1].split(sep='_')[0]=='stadium' and scn.game_enum=='0':
+		if not original_size==f_size and path.split(sep='.')[-1]=='rx3' and path.split(sep='\\')[-1].split(sep='_')[0]=='stadium' and scn.game_enum in ['0','1']:
 			e=open('fifa_tools\\scripts\\msg','r')
 			print(e.read())
 			print('                           I SEE WHAT YOU DID THERE')
@@ -651,7 +658,109 @@ def file_init(path):
 	except IOError as e:
 		return 'io_error'
 
+def overwrite_geometry_data(file):
+	scn=bpy.context.scene
+	#file is an already opened file, needs to close
+	#READ THE COPIED FILE
+	file_ident(file)
+	read_file_offsets(file,dir)
+	
+	print('----------------------------')
+	print('SEARCHING FOR '+str(file.type).upper()+' PARTS IN THE SCENE')
+	
+	progress=0 #store processed parts
+	for i in range(len(file.mesh_offsets)):
+		try:
+			name=file.type+'_'+file.id+'_'+str(i)
+			if file.type=='head':
+				name=name+'_'+file.sub_names[i]
+			object=bpy.data.objects[name]
+			progress +=1
+			print('PROCESSING PART ',name)
+		except KeyError:
+			print('PART ',name,' NOT FOUND')
+			continue
+		
+		verts=[]
+		uvs=[]
+		cols=[]
+		indices=[]
+		
+		opts=fifa_func.mesh_descr_convert(file.mesh_descrs[i]) ; print(opts)
+		verts,uvs,cols,indices=fifa_func.convert_original_mesh_to_data(object) #get new geometry data
+		#print('Part Description: ',opts,'\n','Part Vertices: ',len(verts),'\n','Part UV maps: ',e.uvcount[i],'\n','Part Indices: ',len(indices),'\n','Part Color maps: ',e.colcount[i])
+		
+		file.data.seek(file.mesh_offsets[i][0]+16) #get to geometry data offset
+		fifa_func.convert_mesh_to_bytes(file.data,opts,len(verts),verts,uvs,cols) #write geometry data
+		#print(e.data.tell())
+		if not scn.trophy_flag:
+			file.data.seek(file.indices_offsets[i][0]+16) #get to indices data offset
+			fifa_func.write_indices(file.data,indices) #write indices data
+			
+		print('----------------------------')
+		print('OVERWRITTEN ',str(progress), '/',str(len(file.mesh_offsets)), ' PARTS \n')
+	file.data.close()
+		
+def get_textures_list(object):
+	texture_dict={}
+	textures_list=[]
+	status=''
+	
+	try:
+		mat=bpy.data.materials[object.material_slots[0].material.name]
+		for i in range(3):
+			try:
+				texture_name=mat.texture_slots[i].name
+				texture_image=bpy.data.textures[texture_name].image.name
+				texture_path=bpy.data.images[texture_image].filepath
+				texture_alpha=bpy.data.images[texture_image].use_alpha
+				texture_maxsize=max(bpy.data.images[texture_image].size[0],bpy.data.images[texture_image].size[1])
+				
+				if not texture_name in texture_dict:
+					textures_list.append([texture_name,texture_path,texture_alpha,0,0,0,0,'',texture_maxsize])
+					texture_dict[texture_name]=len(textures_list) #store texture_information indexed in the dictionary
+			except:
+				print('Empty Texture Slot')
+	except:
+		status='material_missing'
+		
+	
+	return texture_dict,textures_list,status
+		
+def write_textures_to_file(textures_list,type):
+	offset_list=[]
+	scn=bpy.context.scene
+	status=fifa_func.texture_convert(textures_list)
+	if status.split(sep=',')[0]=='texture_path_error':
+		return 'missing_texture_file'
+	#Read converted textures and calculate offsets and texture information
+	offset_list,textures_list=fifa_func.read_converted_textures(offset_list,textures_list,'fifa_tools\\')
+	
+	if scn.stadium_export_flag:
+		f_name='stadium_'+str(scn.file_id)+'_'+scn.stadium_version+'_textures.rx3'
+	elif scn.trophy_export_flag:
+		f_name='trophy_ball_'+str(scn.file_id)+'_textures.rx3'
+	elif scn.gen_overwriter_flag or scn.face_edit_flag:
+		f_name=type+'_'+str(scn.file_id)+'_textures.rx3'
+	
+	#Calling Writing to file Functions
+	f=open(scn.export_path+f_name,'wb')
+	fifa_func.write_offsets_to_file(f,offset_list)
+	fifa_func.write_offset_data_to_file(f,'fifa_tools\\',offset_list,[],[],[],textures_list,[],[],[])
+	
+	#Signature
+	f.seek(offset_list[-1][1])
+	f.seek(offset_list[-1][2],1)
+	s=bytes(sig,'utf-8')
+	f.write(s)
+	f.close()	
+	
+	print(offset_list)
+	return 'success'
+		
 
+
+		
 def write_offsets(offset_list,data_pass,object_list,material_list,materials_dict,texture_list,group_list,prop_list,collision_list):
 	#Useful variables:
 	object_count=len(object_list)
@@ -671,7 +780,7 @@ def write_offsets(offset_list,data_pass,object_list,material_list,materials_dict
 			offset_list.append([5798132,0,0,i])
 		
 		#HEAD SPECIFIC
-		if scn.head_export_flag:
+		if scn.face_edit_head_flag:
 			for i in range(object_count):
 				offset_list.append([255353250,0,0,i])
 		
@@ -679,7 +788,7 @@ def write_offsets(offset_list,data_pass,object_list,material_list,materials_dict
 			offset_list.append([5798561,0,0,i])
 		
 		#HEAD SPECIFIC
-		if scn.head_export_flag:
+		if scn.face_edit_head_flag:
 			for i in range(object_count):
 				offset_list.append([3751472158,0,0,i])
 		

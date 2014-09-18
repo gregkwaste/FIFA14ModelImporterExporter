@@ -66,17 +66,13 @@ def read_test(f,opts,count):
 	cols_0=[]
 	cols_1=[]
 	cols_2=[]
-	uvs_0=[]
-	uvs_1=[]
-	uvs_2=[]
-	uvs_3=[]
-	uvs_4=[]
+	uvs_0,uvs_1,uvs_2,uvs_3,uvs_4,uvs_5,uvs_6,uvs_7=[],[],[],[],[],[],[],[]
 	bones_i0=[]
 	bones_i1=[]
 	bones_w=[]
 	bones_c=[]
 	
-	print(opts)
+	#print(opts)
 	for i in range(count):
 		uvcount=0
 		colcount=0
@@ -388,14 +384,14 @@ def convert_original_mesh_to_data(object):
 	data=object.data
 	bm=bmesh.new()
 	bm.from_mesh(data)
-	uvs_0=[];uvs_1=[]
+	uvs_0=[];uvs_1=[];uvs_2=[]
 	col_0=[];col_1=[];col_2=[]
 	
 	uvcount=len(bm.loops.layers.uv)
 	colcount=len(bm.loops.layers.color)
 	
 	rot_x_mat=Matrix.Rotation(radians(90),4,'X')
-	scale_mat=Matrix.Scale(1,4)
+	scale_mat=Matrix.Scale(100,4)
 	
 	for vert in bm.verts:
 		co=scale_mat*rot_x_mat*object.matrix_world*vert.co
@@ -712,7 +708,7 @@ def read_bones(f,count):
 
 def read_string(f):
 	c=''
-	for i in range(48):
+	for i in range(128):
 		s=struct.unpack('<B',f.read(1))[0]
 		if s==0:
 			return c
@@ -1101,7 +1097,7 @@ def write_offset_data_to_file(f,path,offset_list,object_list,materials_list,mate
 					f.write(struct.pack('<I',len(textures_list[j])+1))
 				
 				elif type(textures_list[j][0])==type(''):
-					print('textures')
+					#print('textures')
 					s = bytes(textures_list[j][0], 'utf-8')
 					f.write(struct.pack('<I',len(textures_list[j][0])+1))
 				
@@ -1228,7 +1224,7 @@ def write_offset_data_to_file(f,path,offset_list,object_list,materials_list,mate
 				tw=size//(w*multiplier*divider)
 				f.write(struct.pack('<4I',w*multiplier,tw,w*multiplier*tw,0))
 				f.write(t.read(tw*w*multiplier))
-				print(tw)
+				#print(tw)
 				w=w//2
 				size=size//4
 			t.close()
@@ -1238,7 +1234,7 @@ def write_offset_data_to_file(f,path,offset_list,object_list,materials_list,mate
 ##TEXTURE FUNCTIONS
 
 
-def texture_convert(self,textures_list):
+def texture_convert(textures_list):
 	status=''
 	for tex in textures_list:
 		if tex[2]:
@@ -1351,23 +1347,7 @@ def object_separate(ob):
 	print('separating')
 		
 	
-	
-	
 		
-		
-		
-		
-		
-		
-		
-		
-	
-		
-	
-	
-	
-	
-	
 			
 			
 def vector_to_matrix(v):
