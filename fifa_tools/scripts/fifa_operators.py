@@ -37,9 +37,7 @@ texture_name_dict={0:'diffuseTexture',
 			3:'normalMap'
 }
 
-light_props=[
-['sShader',['fGlareSensitivityCenter','fGlareSensitivityEdge','fGlareSensitivityPower','fGlareSizeMultSpread',
-'fGlareBloomScale','fGlareBloomSpread','fGlareBloomRate','fGlareRotationRate','fFlareMovementRate','fFlareOffsetScale','fFlareEndScale'],['fVbeamAngle','fVbeamAngleSpread','fVbeamLength','fVbeamLengthSpread']],
+light_props=[['sShader',['fGlareSensitivityCenter','fGlareSensitivityEdge','fGlareSensitivityPower','fGlareSizeMultSpread','fGlareBloomScale','fGlareBloomSpread','fGlareBloomRate','fGlareRotationRate','fFlareMovementRate','fFlareOffsetScale','fFlareEndScale'],['fVbeamAngle','fVbeamAngleSpread','fVbeamLength','fVbeamLengthSpread']],
 'sTexture',
 'sTechnique',
 ['bUseColorRamp',['vColorRamp','vColorRampTimes']],
@@ -84,6 +82,17 @@ group_names=['Pitch',
 'StadiumWear_NoShadowCast',
 'Sky',
 'Weather_NoShadowCast',
+]
+group_names_15=group_names+[
+'CrowdNet',
+'Default',
+'Pitch_NoShadowCast',
+'TournamentDressing',
+'Exterior',
+'Exterior_NoShadowCast',
+'Exterior_ShadowAlpha',
+'Roof_NoShadowCast',
+'Roof_ShadowAlpha',
 ]
 
 ##OPERATORS
@@ -418,11 +427,14 @@ class file_import(bpy.types.Operator) :
 			if f=='io_error':
 				self.report({'ERROR'},'File Error')
 				return {'CANCELLED'}
-			elif e=='corrupt_file':
+			elif f=='corrupt_file':
 				self.report({'ERROR'},'Corrupt File')
 				return {'CANCELLED'}	
-							
-			
+			elif f=='file_clopy':
+				self.report({'ERROR'},'Illegal File')
+				return {'CANCELLED'}
+				
+			print(f)
 			f.type=path.split(sep='\\')[-1].split(sep='_')[0]+'_'+'texture'
 			fifa_main.file_ident(f)
 			fifa_main.read_file_offsets(f,dir)
@@ -491,7 +503,7 @@ class file_import(bpy.types.Operator) :
 			elif f=='file_clopy':
 				self.report({'ERROR'},'Illegal File')
 				return {'CANCELLED'}
-			elif e=='corrupt_file':
+			elif f=='corrupt_file':
 				self.report({'ERROR'},'Corrupt File')
 				return {'CANCELLED'}
 			
@@ -516,11 +528,9 @@ class file_import(bpy.types.Operator) :
 			if scn.geometry_flag==True:
 				print('PASSING MESHES TO SCENE')
 				for i in range(f.mesh_count):
-					#try:
-					#	sub_name=f.sub_names[i]
-					#except:
-					#	sub_name='part'+str(i)
 					sub_name=f.type+'_'+str(f.id)+'_'+str(i)
+					if f.type=='head':
+						sub_name+='_'+f.sub_names[i]
 					obname=fifa_main.createmesh(f.vxtable[i],f.itable[i],f.uvs[i],f.type,objectcount,f.id,sub_name,f.cols[i],False,[])
 					objectcount+=1
 					#Create Vertex Groups Based on BONES
@@ -614,9 +624,9 @@ class file_import(bpy.types.Operator) :
 			
 			
 			#Stadium Objects Renaming. Should be done after material assignment
-				if f.type=='stadium':
-					for i in range(f.mesh_count):
-						bpy.data.objects[f.type+'_'+str(f.id)+'_'+str(i)].name=f.sub_names[i]
+			if f.type=='stadium':
+				for i in range(f.mesh_count):
+					bpy.data.objects[f.type+'_'+str(f.id)+'_'+str(i)].name+='_'+f.sub_names[i]
 			
 			
 			
@@ -1388,6 +1398,7 @@ class file_overwrite(bpy.types.Operator) :
 			
 			fifa_main.overwrite_geometry_data(e) #overwrite data
 		
+		#FACE EDITING MODE
 		if scn.face_edit_flag:
 			print('FACE EDITING MODE PROCEDURE \n')
 			parts=[]

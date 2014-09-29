@@ -294,9 +294,9 @@ def createmesh(verts,faces,uvs,name,count,id,subname,colors,normal_flag,normals)
 	bm.free()  # free and prevent further access
 	
 	
-	if name.split(sep='_')[0]=='head':
-		object=bpy.data.objects.new(name+'_'+str(id)+'_'+str(count)+'_'+subname,mesh)
-	elif name.split(sep='_')[0]=='stadium':
+	#if name.split(sep='_')[0]=='head':
+	#	object=bpy.data.objects.new(name+'_'+str(id)+'_'+str(count)+'_'+subname,mesh)
+	if name.split(sep='_')[0] in ['stadium','head']:
 		object=bpy.data.objects.new(subname,mesh)
 	else:
 		object=bpy.data.objects.new(name+'_'+str(id)+'_'+str(count),mesh)
@@ -621,7 +621,12 @@ def file_init(path):
 			f.data.read(8)
 			for i in range(sec_num):
 				#Uniform the offset
-				f.data.read(f.data.tell() % 4)
+				off=f.data.tell() % 4
+				#print('Unzlibing section',i , 'Offset', hex(f.data.tell()),off)
+				
+				if off:
+					f.data.read(4-off)
+				
 				#find sec length
 				sec_found=False
 				while sec_found==False:
@@ -629,9 +634,10 @@ def file_init(path):
 					if not sec_len==0:
 						sec_found=True
 				
-				f.data.read(4) #Skip 00 00 00 01
 				
+				f.data.read(4) #Skip 00 00 00 01
 				data=f.data.read(sec_len)  #Store part  
+				
 				try:
 					t.write(zlib.decompress(data,-15))
 				except zlib.error:
