@@ -12,6 +12,7 @@ fifa_main=imp.load_source('fifa_main',fifa_main_path)
 fifa_func_path='fifa_tools\\scripts\\fifa_functions.py'
 fifa_func=imp.load_source('fifa_func',fifa_func_path)
 #fifa_func=imp.load_compiled('fifa_func','fifa_tools\\scripts\\fifa_functions.pyc')
+helper=fifa_func.general_helper()
 
 
 
@@ -423,7 +424,7 @@ class file_import(bpy.types.Operator) :
 				self.report({'ERROR'},'No valid file selected as a texture file')
 				return {'CANCELLED'}
 			
-			f=fifa_main.file_init(path)
+			f=fifa_main.fifa_rx3(path)
 			if f=='io_error':
 				self.report({'ERROR'},'File Error')
 				return {'CANCELLED'}
@@ -436,8 +437,8 @@ class file_import(bpy.types.Operator) :
 				
 			print(f)
 			f.type=path.split(sep='\\')[-1].split(sep='_')[0]+'_'+'texture'
-			fifa_main.file_ident(f)
-			fifa_main.read_file_offsets(f,dir)
+			f.file_ident()
+			f.read_file_offsets(dir)
 			
 			##Reading is enough for Stadium Textures
 			if f.type=='stadium_texture':
@@ -496,7 +497,7 @@ class file_import(bpy.types.Operator) :
 				continue
 			
 			#INIT FILE
-			f=fifa_main.file_init(path)
+			f=fifa_main.fifa_rx3(path)
 			if f=='io_error':
 				self.report({'ERROR'},'File Error')
 				return {'CANCELLED'}
@@ -520,8 +521,8 @@ class file_import(bpy.types.Operator) :
 			
 			print('FILE TYPE DETECTED: ',f.type)
 			
-			fifa_main.file_ident(f)
-			fifa_main.read_file_offsets(f,dir)
+			f.file_ident()
+			f.read_file_offsets(dir)
 			
 			print(f.group_names)
 			#print(f.sub_names)
@@ -656,7 +657,7 @@ class file_import(bpy.types.Operator) :
 				
 				
 				for i in range(len(f.props)):
-					object_name=fifa_func.create_prop(f.props[i],f.prop_positions[i],f.prop_rotations[i])
+					object_name=helper.create_prop(f.props[i],f.prop_positions[i],f.prop_rotations[i])
 				
 					if not 'PROPS' in bpy.data.objects:
 						bpy.ops.object.empty_add(type='PLAIN_AXES', location=(0,0,0))
@@ -1414,7 +1415,7 @@ class file_overwrite(bpy.types.Operator) :
 				except FileNotFoundError:
 					self.report({'ERROR'},'File Not Found')
 					return {'CANCELLED'}
-				e=fifa_main.file_init(scn.export_path+'\\'+name) #open copied file
+				e=fifa_main.fifa_rx3(scn.export_path+'\\'+name) #open copied file
 				#check return codes
 				if e=='io_error':
 					self.report({'ERROR'},'File Error')
@@ -1426,7 +1427,7 @@ class file_overwrite(bpy.types.Operator) :
 					self.report({'ERROR'},'Illegal File')
 					return {'CANCELLED'}
 				
-				fifa_main.overwrite_geometry_data(e) #overwrite data
+				e.overwrite_geometry_data() #overwrite data
 				progress+=1
 				
 			
