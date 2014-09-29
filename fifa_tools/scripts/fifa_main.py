@@ -904,36 +904,8 @@ class fifa_rx3:
 			
 		self.collisions.append((name,verts,indices))	
 
-
+#GENERAL FIFA FUNCTIONS
 		
-def get_textures_list(object):
-	texture_dict={}
-	textures_list=[]
-	status=''
-	
-	try:
-		mat=bpy.data.materials[object.material_slots[0].material.name]
-		for i in range(3):
-			try:
-				texture_name=mat.texture_slots[i].name
-				texture_image=bpy.data.textures[texture_name].image.name
-				texture_path=bpy.data.images[texture_image].filepath
-				texture_alpha=bpy.data.images[texture_image].use_alpha
-				texture_maxsize=max(bpy.data.images[texture_image].size[0],bpy.data.images[texture_image].size[1])
-				
-				if not texture_name in texture_dict:
-					textures_list.append([texture_name,texture_path,texture_alpha,0,0,0,0,'',texture_maxsize])
-					texture_dict[texture_name]=len(textures_list) #store texture_information indexed in the dictionary
-			except:
-				print('Empty Texture Slot')
-	except:
-		status='material_missing'
-		
-	
-	return texture_dict,textures_list,status
-
-
-	
 def write_textures_to_file(textures_list,type):
 	offset_list=[]
 	scn=bpy.context.scene
@@ -941,7 +913,7 @@ def write_textures_to_file(textures_list,type):
 	if status.split(sep=',')[0]=='texture_path_error':
 		return 'missing_texture_file'
 	#Read converted textures and calculate offsets and texture information
-	offset_list,textures_list=fifa_func.read_converted_textures(offset_list,textures_list,'fifa_tools\\')
+	offset_list,textures_list=read_converted_textures(offset_list,textures_list,'fifa_tools\\')
 	
 	if scn.stadium_export_flag:
 		f_name='stadium_'+str(scn.file_id)+'_'+scn.stadium_version+'_textures.rx3'
@@ -952,8 +924,8 @@ def write_textures_to_file(textures_list,type):
 	
 	#Calling Writing to file Functions
 	f=open(scn.export_path+f_name,'wb')
-	fifa_func.write_offsets_to_file(f,offset_list)
-	fifa_func.write_offset_data_to_file(f,'fifa_tools\\',offset_list,[],[],[],textures_list,[],[],[])
+	write_offsets_to_file(f,offset_list)
+	write_offset_data_to_file(f,'fifa_tools\\',offset_list,[],[],[],textures_list,[],[],[])
 	
 	#Signature
 	f.seek(offset_list[-1][1])
@@ -965,7 +937,333 @@ def write_textures_to_file(textures_list,type):
 	print(offset_list)
 	return 'success'
 		
+def read_converted_textures(offset_list,textures_list,path):
+	offset_list.append((1808827868,len(textures_list)*16+48,len(textures_list)*16+16))
+	
+	for k in range(len(textures_list)):
+		ext_len=len(textures_list[k][1].split(sep='\\')[-1].split(sep='.')[-1])
+		
+		t=open(path+textures_list[k][1].split(sep='\\')[-1][0:-ext_len-1]+'.dds','rb')
+		textures_list[k][3],textures_list[k][4],textures_list[k][5],textures_list[k][7]=tex_helper.read_dds_info(t) #store width,height,mipmaps,type
+		t.close()
+		print(textures_list[k][3],textures_list[k][4],textures_list[k][5],textures_list[k][7])
+		
+		phys_size=textures_list[k][3]*textures_list[k][4]
+		divider=1
+		
+		size=0
+		w=textures_list[k][3]
+		h=textures_list[k][4]
+		if textures_list[k][7]=='DXT1':
+			divider=2
+		
+		#Calculate Size
+		for i in range(textures_list[k][5]):
+			size=size+w*h//divider+16
+			w=w//2
+			h=h//2
+		
+		
+		textures_list[k][6]=helper.size_round(size+16) #store size after calculation
+		offset_list.append((2047566042,offset_list[-1][1]+offset_list[-1][2],textures_list[k][6],k))
+	
+	size=16
+	for i in range(len(textures_list)):
+		size=size+len(textures_list[i][0])+9
+	
+	offset_list.append((1285267122,offset_list[-1][1]+offset_list[-1][2],helper.size_round(size)))
+	
+	return offset_list,textures_list
+		
+def write_offsets_to_file(f,offset_list):
+	#Calculate file size
+	size=0
+	for off in offset_list:
+		size+=off[2]+16
+	
+	#File Header
+	f.write(struct.pack('<4I',1815304274,4,size+16,len(offset_list)))
+	for i in offset_list:
+		f.write(struct.pack('<4I',i[0],i[1],i[2],0))
 
+def write_offset_data_to_file(f,path,offset_list,object_list,materials_list,materials_dict,textures_list,group_list,prop_list,collision_list):
+	#Local Variables
+	object_count=len(object_list)
+	texture_count=len(textures_list)
+	for i in range(len(offset_list)):
+		f.seek(offset_list[i][1])
+		if offset_list[i][0]==582139446:
+			f.write(struct.pack('<4I',object_count,0,0,0))
+			for j in range(object_count):
+				if object_list[j][1]>65535:
+					ind_size=4
+				else:
+					ind_size=2
+				f.write(struct.pack('<4I',size_round(object_list[j][2]*ind_size+16),object_list[j][2],ind_size,0))
+		elif offset_list[i][0]==3263271920: #mesh description
+			id=offset_list[i][3]
+			f.write(struct.pack('<4I',offset_list[i][2],len(object_list[id][6])+1,0,0))
+			s = bytes(object_list[id][6], 'utf-8')
+			f.write(s) 
+		elif offset_list[i][0]==685399266: # PROP POSITIONS
+			id=offset_list[i][3]
+			f.write(struct.pack('<Ifff',offset_list[i][2],prop_list[id][1][0],prop_list[id][1][1],prop_list[id][1][2]))
+			f.write(struct.pack('<fffI',prop_list[id][2][0],prop_list[id][2][1],prop_list[id][2][2],0))
+		elif offset_list[i][0]==1285267122: #PROPS
+			#header
+			f.write(struct.pack('<4I',offset_list[i][2],len(prop_list)+len(textures_list)+len(object_list),0,0))
+			#data
+			for j in range(len(prop_list)):
+				f.write(struct.pack('<2I',685399266,len(prop_list[j][0])+1))
+				s = bytes(prop_list[j][0], 'utf-8')
+				f.write(s)
+				f.write(b'\x00')
+			for j in range(len(object_list)):
+				f.write(struct.pack('<2I',3566041216,len(object_list[j][0])+1))
+				s = bytes(object_list[j][0], 'utf-8')
+				f.write(s)
+				f.write(b'\x00')
+			for j in range(len(textures_list)):
+				f.write(struct.pack('<I',2047566042))
+				
+				if type(textures_list[j])==type(''):
+					s = bytes(textures_list[j], 'utf-8')
+					f.write(struct.pack('<I',len(textures_list[j])+1))
+				
+				elif type(textures_list[j][0])==type(''):
+					#print('textures')
+					s = bytes(textures_list[j][0], 'utf-8')
+					f.write(struct.pack('<I',len(textures_list[j][0])+1))
+				
+				f.write(s)
+				f.write(b'\x00')
+			
+			
+			
+			
+		elif offset_list[i][0]==5798132: #INDICES
+			id=offset_list[i][3]
+			#header
+			if object_list[id][1]>65535:
+				ind_size=4
+			else:
+				ind_size=2
+			f.write(struct.pack('<4I',size_round(object_list[id][2]*ind_size+16),object_list[id][2],ind_size,0))  
+			#data
+			write_indices(f,object_list[id][11])
+		elif offset_list[i][0]==5798561: #VERTICES
+			id=offset_list[i][3]
+			#header
+			f.write(struct.pack('<4I',offset_list[i][2],object_list[id][1],object_list[id][8],1))
+			#data
+			convert_mesh_to_bytes(f,object_list[id][7],object_list[id][1],object_list[id][9],object_list[id][10],object_list[id][4])
+		elif offset_list[i][0]==3566041216: #80......
+			f.write(struct.pack('<4I',4,0,0,0))
+		elif offset_list[i][0]==230948820: #GROUPS
+			id=offset_list[i][3]
+			#print(id,len(group_list))
+			#header
+			data=f.write(struct.pack('<4I',offset_list[i][2],1,0,0))	
+			#data
+			if id>=len(group_list):
+				s = bytes('CollisionGeometry', 'utf-8')
+				data+=f.write(s)
+				data+=f.write(b'\x00')
+				data+=f.write(struct.pack('B',id)) 
+			else:
+				s = bytes(group_list[id][0][5:], 'utf-8')
+				f.write(s)	
+				f.write(b'\x00')
+				f.write(struct.pack('B',id)) 
+		elif offset_list[i][0]==123459928:
+			id=offset_list[i][3]
+			#material header
+			f.write(struct.pack('<4I',offset_list[i][2],len(materials_dict[materials_list[id]][3]),0,0))
+			#data
+			#material_name
+			#print(materials_dict[materials_list[id]][1])
+			s=bytes(materials_dict[materials_list[id]][1],'utf-8')
+			f.write(s)
+			f.write(b'\x00')
+			#textures
+			for j in range(len(materials_dict[materials_list[id]][2])):
+				s=bytes(materials_dict[materials_list[id]][3][j],'utf-8')
+				f.write(s)
+				f.write(b'\x00')
+				#print(textures_list.index(materials_dict[materials_list[id]][2][j]))
+				f.write(struct.pack('I',textures_list.index(materials_dict[materials_list[id]][2][j])))
+		elif offset_list[i][0]==2116321516: #RENDERLINES
+			id=offset_list[i][3]
+			#renderline header
+			f.write(struct.pack('<4I',offset_list[i][2],1,4294967295,0))
+			#renderline data
+			f.write(struct.pack('<4f',1,0,0,0))
+			f.write(struct.pack('<4f',0,1,0,0))
+			f.write(struct.pack('<4f',0,0,1,0))
+			f.write(struct.pack('<4f',0,0,0,1))
+			f.write(struct.pack('<4f',group_list[id][1][0],group_list[id][1][1],group_list[id][1][2],1))
+			f.write(struct.pack('<4f',group_list[id][2][0],group_list[id][2][1],group_list[id][2][2],1))
+			f.write(struct.pack('<2I',group_list[id][3],4294967295))
+			object_offset=group_list[id][4]
+			for j in range(group_list[id][3]):
+				f.write(struct.pack('<4f',object_list[object_offset+j][5][0][0],object_list[object_offset+j][5][0][1],object_list[object_offset+j][5][0][2],1))
+				f.write(struct.pack('<4f',object_list[object_offset+j][5][1][0],object_list[object_offset+j][5][1][1],object_list[object_offset+j][5][1][2],1))
+				f.write(struct.pack('<2I',object_offset+j,object_list[object_offset+j][13]))
+		elif offset_list[i][0]==4034198449: #COLLISIONS
+			id=offset_list[i][3]
+			f.write(struct.pack('4I',offset_list[i][2],1,0,0))
+			s=bytes(collision_list[id][2],'utf-8')
+			f.write(s)
+			f.write(b'\x00')
+			f.write(struct.pack('I',1))
+			f.write(struct.pack('I',collision_list[id][0]))
+			for i in range(len(collision_list[id][1])):
+				f.write(struct.pack('<3f',collision_list[id][1][i][0],collision_list[id][1][i][1],collision_list[id][1][i][2]))
+			
+		elif offset_list[i][0]==1808827868:
+			f.write(struct.pack('<4I',texture_count,0,0,0))
+			id=0
+			for tex in textures_list:
+				if tex[7]=='DXT5':
+					id=2
+				f.write(struct.pack('<IBBHHHHH',tex[6],1,id,1,tex[3],tex[4],1,tex[5]))
+		elif offset_list[i][0]==2047566042:
+			id=offset_list[i][3]
+			#texture writing
+			ext_len=len(textures_list[id][1].split(sep='\\')[-1].split(sep='.')[-1])
+			
+			t=open(path+textures_list[id][1].split(sep='\\')[-1][0:-1-ext_len]+'.dds','rb')
+			
+			#Get ready to write
+			divider=1
+			comp_id=0
+			w=textures_list[id][3]
+			h=textures_list[id][4]
+			phys_size=w*h
+			mipmaps=textures_list[id][5]
+			if textures_list[id][7]=='DXT1':
+				divider=2
+				multiplier=2
+			if textures_list[id][7]=='DXT5':
+				comp_id=2
+				multiplier=4
+			t.seek(128)
+			
+			#Write texture
+			#header
+			f.write(struct.pack('<IBBHHHHH',textures_list[id][6],1,comp_id,1,textures_list[id][3],textures_list[id][4],1,textures_list[id][5]))
+			#data
+			size=phys_size
+			for j in range(mipmaps):
+				tw=size//(w*multiplier*divider)
+				f.write(struct.pack('<4I',w*multiplier,tw,w*multiplier*tw,0))
+				f.write(t.read(tw*w*multiplier))
+				#print(tw)
+				w=w//2
+				size=size//4
+			t.close()
+			
+def crowd_seat_align(align_vector):
+	scn=bpy.context.scene
+	ob=bpy.context.object
+	bm=bmesh.from_edit_mesh(ob.data)
+	
+	for f in bm.faces:
+		if f.select==True:
+			base=helper.face_center(f)
+			
+			if align_vector==Vector((0,0,0)): #calculate cursor vector
+				align_vector=ob.matrix_world.inverted()*(scn.cursor_location-(ob.matrix_world*base))
+				align_vector=Vector((align_vector[0],align_vector[1]))
+			
+			angle=Vector((f.normal[0],f.normal[1])).angle_signed(align_vector) #calculate declining angle
+			#print('Angle: ',round(angle),degrees(angle))
+			
+				
+			rot_mat=Matrix.Rotation(round(-angle,2),4,'Z')
+			
+			for v in f.verts:
+				v.co=v.co-base
+				v.co=rot_mat*v.co
+				v.co=v.co+base
+	bm.normal_update()			
+	bmesh.update_edit_mesh(ob.data, False)	
+		
+def crowd_seat_create(v_num,h_num,v_dist,h_dist,gap,context):
+	scn=context.scene
+	found_crowd=False
+	#Check for crowd object
+	if context.mode=='EDIT_MESH':
+		ob=context.object
+		bm=bmesh.from_edit_mesh(ob.data)
+		found_object=ob
+		print(found_object)
+	else:
+		bm=bmesh.new()
+		for ob in scn.objects:
+			if ob.name=='crowd':
+				#ob=bpy.context.object
+				found_object=ob
+				bm.from_mesh(ob.data)
+				found_crowd=True
+				break
+		
+	try:
+		print(found_object)
+	except:
+		print('Object not found')
+		
+	print(bm)
+	cursor_loc=Vector((scn.cursor_location[0],scn.cursor_location[1],scn.cursor_location[2]))
+	for i in range(v_num):
+		for j in range(h_num):
+			bm.faces.new((bm.verts.new(Vector((cursor_loc[0]+0.01,cursor_loc[1]+0.01,cursor_loc[2]-0.01))),
+						bm.verts.new(Vector((cursor_loc[0]-0.01,cursor_loc[1]+0.01,cursor_loc[2]-0.01))),
+						bm.verts.new(Vector((cursor_loc[0]-0.01,cursor_loc[1]-0.01,cursor_loc[2]+0.01))),
+						bm.verts.new(Vector((cursor_loc[0]+0.01,cursor_loc[1]-0.01,cursor_loc[2]+0.01))))
+						)
+			
+			cursor_loc[0]-=h_dist*0.01
+		cursor_loc[0]=scn.cursor_location[0]
+		cursor_loc[1]+=gap*0.01
+		cursor_loc[2]-=v_dist*0.01
+			
+	bm.normal_update()
+	
+	
+	if found_crowd==False and context.mode=='OBJECT':
+		me=bpy.data.meshes.new('crowd')
+		bm.to_mesh(me)
+		ob=bpy.data.objects.new('crowd',me)
+		context.scene.objects.link(ob)
+	elif found_crowd==True: 
+		bm.to_mesh(found_object.data)
+	elif context.mode=='EDIT_MESH':
+		bmesh.update_edit_mesh(found_object.data)
+		
+	bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
+
+def crowd_groups(name):
+	scn=bpy.context.scene
+	ob=bpy.context.object
+	bm=bmesh.from_edit_mesh(ob.data)
+   
+    #populate vertex list with selected vertices
+	vxlist=[]
+	for v in bm.verts:
+		if v.select==True:
+			vxlist.append(v.index)
+	bm.free()
+	bpy.ops.object.editmode_toggle()
+	 
+	if not name in ob.vertex_groups:
+		ob.vertex_groups.new(name)
+	
+	for g in ob.vertex_groups:
+		if g.name==name:
+			ob.vertex_groups[name].add(vxlist,1,'ADD')
+		else:
+			ob.vertex_groups[g.name].add(vxlist,1,'SUBTRACT')		  
 
 		
 def write_offsets(offset_list,data_pass,object_list,material_list,materials_dict,texture_list,group_list,prop_list,collision_list):
@@ -1014,6 +1312,7 @@ def write_offsets(offset_list,data_pass,object_list,material_list,materials_dict
 				offset_list.append([2116321516,0,0,i])
 			for i in range(group_count+1):
 				offset_list.append([230948820,0,0,i])   
+	
 	elif data_pass==1:
 		
 		table_size=len(offset_list)
@@ -1078,8 +1377,6 @@ def write_offsets(offset_list,data_pass,object_list,material_list,materials_dict
 				offset_list[i][2]=fifa_func.size_round(16+4*16+32+8+group_list[id][3]*40)								
 								
 			
-	return offset_list			  
-			
-			
-		
-		
+	return offset_list
+	
+	

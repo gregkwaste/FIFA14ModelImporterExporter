@@ -42,16 +42,43 @@ class texture_helper:
 		return data
 
 	def read_dds_info(self,data):
-		f.seek(12)
-		width=struct.unpack('<I',f.read(4))[0]
-		height=struct.unpack('<I',f.read(4))[0]
-		f.seek(8,1)
-		mipmaps=struct.unpack('<H',f.read(2))[0]
-		f.seek(54,1)
+		data.seek(12)
+		width=struct.unpack('<I',data.read(4))[0]
+		height=struct.unpack('<I',data.read(4))[0]
+		data.seek(8,1)
+		mipmaps=struct.unpack('<H',data.read(2))[0]
+		data.seek(54,1)
 		type=''
-		type=type.join([chr(i) for i in f.read(4)])
+		type=type.join([chr(i) for i in data.read(4)])
 		
 		return height,width,mipmaps,type
+		
+	def get_textures_list(self,object):
+		texture_dict={}
+		textures_list=[]
+		status=''
+		
+		try:
+			mat=bpy.data.materials[object.material_slots[0].material.name]
+			for i in range(3):
+				try:
+					texture_name=mat.texture_slots[i].name
+					texture_image=bpy.data.textures[texture_name].image.name
+					texture_path=bpy.data.images[texture_image].filepath
+					texture_alpha=bpy.data.images[texture_image].use_alpha
+					texture_maxsize=max(bpy.data.images[texture_image].size[0],bpy.data.images[texture_image].size[1])
+					
+					if not texture_name in texture_dict:
+						textures_list.append([texture_name,texture_path,texture_alpha,0,0,0,0,'',texture_maxsize])
+						texture_dict[texture_name]=len(textures_list) #store texture_information indexed in the dictionary
+				except:
+					print('Empty Texture Slot')
+		except:
+			status='material_missing'
+			
+		
+		return texture_dict,textures_list,status
+
 		  
 # Helping function class
 class general_helper:
@@ -182,7 +209,7 @@ class general_helper:
 			matrix[i][i]=v[i]
 		return matrix		
 	
-	def size_round(size):
+	def size_round(self,size):
 		rest=size % 16
 		eucl=size // 16
 		if rest>0:
@@ -190,7 +217,7 @@ class general_helper:
 		return size 
 
 
-	def face_center(f):
+	def face_center(self,f):
 		cx=0
 		cy=0
 		cz=0
@@ -254,8 +281,142 @@ class general_helper:
 		#ob.data.body=name+'_'+str(i)
 		ob.scale=Vector((0.1,0.1,0.1))
 		return ob.name
+		
+	def object_bbox(self,object):
+		
+		#Matrices
+		rot_x_mat=Matrix.Rotation(radians(-90),4,'X')
+		scale_mat=Matrix.Scale(1000,4)
+		
+		#Getters
+		getz=operator.itemgetter(2)
+		gety=operator.itemgetter(1)
+		getx=operator.itemgetter(0)
+		
+		bv_list=[]
+		for j in object.bound_box:
+			#Object Matrices
+			bbox=Vector()
+			bbox[0]=j[0]
+			bbox[1]=j[1]
+			bbox[2]=j[2]
+			
+			object_matrix_wrld=object.matrix_world
+			bbox=rot_x_mat*scale_mat*object_matrix_wrld*(bbox)
+			
+			bv_list.append((bbox[2],bbox[1],bbox[0]))
+			
+		print(bv_list)
+		
+		#Returned Vectors
+		bbox1=Vector()
+		bbox2=Vector()
+		
+		#get min values
+		bbox1[0]=min(bv_list,key=getz)[2]
+		bbox1[1]=min(bv_list,key=gety)[1]
+		bbox1[2]=min(bv_list,key=getx)[0]
+		
+		#get max values
+		bbox2[0]=max(bv_list,key=getz)[2]
+		bbox2[1]=max(bv_list,key=gety)[1]
+		bbox2[2]=max(bv_list,key=getx)[0]
+		
+		
+		return bbox1,bbox2
+
+
+	def paint_faces(self,object,color,layer_name):
+		bm=bmesh.from_edit_mesh(object.data)
+		collayer=bm.loops.layers.color[layer_name]
+		for f in bm.faces:
+			if f.select==True:
+				for l in f.loops:
+					l[collayer]=color
+		bmesh.update_edit_mesh(object.data, True)
 	
+	def auto_paint_mesh(self,object,layer_name):
+		scn=bpy.context.scene
+		bm=bmesh.new()
+		bm.from_mesh(object.data)
+		bm.normal_update()
+		#base_0=0.498
+		#base_1=0.502
+		
+		obj_rotation=object.rotation_euler
+		print(obj_rotation)
+		collayer=bm.loops.layers.color[layer_name]
+		
+		for f in bm.faces:
+			for l in f.loops:
+				vert=l.vert
+				
+				#rot=Euler((-1.5707963705062866, 0.0, 0.0), 'XYZ')
+				norm=vert.normal
+				#norm.rotate(obj_rotation)
+				norm.normalize()
+				
+				#norm.rotate(rot)
+				
+				if scn.autopaint_modes=='0':
+					l[collayer][0]=self.norm_to_col(round(-norm[1],3),0)
+					l[collayer][1]=self.norm_to_col(round(norm[2],3),2)
+					l[collayer][2]=self.norm_to_col(round(norm[0],3),1)
+				elif scn.autopaint_modes=='1':
+					l[collayer][0]=self.norm_to_col(round(-norm[0],3),0)
+					l[collayer][1]=self.norm_to_col(round(-norm[2]*0.00068,3),0)
+					l[collayer][2]=self.norm_to_col(round(-norm[1],3),1)
+			
+		bm.to_mesh(object.data)
+		bm.free() 
 	
+
+	def norm_to_col(self,x,axis):
+		#converting normal Vector to Color Information
+		#Arguments:
+		#x:	normal Vector
+		#axis: desired axis
+		
+		try:
+			angle=Vector((x,0)).angle_signed(Vector((1,0)))
+		except:
+			angle=0    
+		
+		if angle<=0:
+		
+		
+			if x==-1:
+				return 0.502
+			elif  -1<x<0:
+				return -0.502*x
+			elif 1>=x>=0:
+				return 0.498*x
+		else:
+			if x==-1:
+				return 0.502
+			elif  -1<x<0:
+				return 0.498*x+1
+			elif 1>=x>=0:
+				return -0.502*x+1   
+				
+	def crowd_col(self,ob,col,name):
+		me=bpy.data.objects[ob].data
+		coltex=me.vertex_colors.new(name=name)
+		
+		bm=bmesh.new()
+		bm.from_mesh(me)
+		
+		collayer=bm.loops.layers.color[name]
+		for f in bm.faces:
+			for l in f.loops:
+				l[collayer].r=col[f.index][0]
+				l[collayer].g=col[f.index][1]
+				l[collayer].b=col[f.index][2]
+				
+		
+		bm.to_mesh(me)
+		bm.free()
+		
 	
 class fifa_helper:
 	
@@ -415,8 +576,6 @@ class fifa_helper:
 			return len(verts),verts,len(uvs),uvs,len(indices)*3,indices,cols
 
 		
-		
-		
 	def convert_mesh_collisions(object):
 		data=object.data
 		verts=[]
@@ -458,43 +617,7 @@ class fifa_helper:
 		
 		return triscount,verts,object.name.split(sep='_')[-1]+'Shape'
 		
-		
 	
-
-	
-	
-				
-
-
-	def write_head_data(f,verts,uvs,chunk_length):
-		
-		for i in range(len(verts)):
-			#VERT SECTION
-			f.write(struct.pack('<fff',round(verts[i][0],8),round(verts[i][1],8),round(verts[i][2],8)))
-			f.read(8)
-			#UV SECTION
-			huvx=comp.compress(round(uvs[i][0],8))
-			huvy=comp.compress(round(1-uvs[i][1],8))
-			f.write(struct.pack('<HH',huvx,huvy))
-			f.read(8)
-		
-
-
-		
-	def write_hair_data(f,verts,uvs,chunk_length):
-		for i in range(len(verts)):
-			#VERT SECTION
-			hvx=comp.compress(round(verts[i][0],8))
-			hvy=comp.compress(round(verts[i][1],8))
-			hvz=comp.compress(round(verts[i][2],8))
-			f.write(struct.pack('<HHH',hvx,hvy,hvz))
-			f.read(14)
-			#UV SECTION
-			huvx=comp.compress(round(uvs[i][0],8))
-			huvy=comp.compress(round(1-uvs[i][1],8))
-			f.write(struct.pack('<HH',huvx,huvy))
-			f.read(8)
-			   
 	def write_crowd_file(f,object):
 		data=object.data
 		bm=bmesh.new()
@@ -577,25 +700,6 @@ class fifa_helper:
 			
 			f.write(struct.pack('<H',0)) #Padding
 		
-
-	def crowd_col(ob,col):
-		me=bpy.data.objects[ob].data
-		coltex=me.vertex_colors.new(name='seat_colors')
-		
-		bm=bmesh.new()
-		bm.from_mesh(me)
-		
-		collayer=bm.loops.layers.color['seat_colors']
-		for f in bm.faces:
-			for l in f.loops:
-				l[collayer].r=col[f.index][0]
-				l[collayer].g=col[f.index][1]
-				l[collayer].b=col[f.index][2]
-				
-		
-		bm.to_mesh(me)
-		bm.free()
-		
 		
 	def chunkzip_decomp(data):
 		print('Decompressing File')
@@ -604,136 +708,7 @@ class fifa_helper:
 		t.close()
 		return t.name
 
-	def crowd_seat_align(align_vector):
-		scn=bpy.context.scene
-		ob=bpy.context.object
-		
-		bm=bmesh.from_edit_mesh(ob.data)
-		
-		
-		
-		
-		for f in bm.faces:
-			if f.select==True:
-				base=face_center(f)
-				
-				if align_vector==Vector((0,0,0)): #calculate cursor vector
-					align_vector=ob.matrix_world.inverted()*(scn.cursor_location-(ob.matrix_world*base))
-					align_vector=Vector((align_vector[0],align_vector[1]))
-				
-				angle=Vector((f.normal[0],f.normal[1])).angle_signed(align_vector) #calculate declining angle
-				#print('Angle: ',round(angle),degrees(angle))
-				
-					
-				rot_mat=Matrix.Rotation(round(-angle,2),4,'Z')
-				
-				for v in f.verts:
-					v.co=v.co-base
-					v.co=rot_mat*v.co
-					v.co=v.co+base
-		bm.normal_update()			
-		bmesh.update_edit_mesh(ob.data, False)	
-			
-	def crowd_seat_create(v_num,h_num,v_dist,h_dist,gap,context):
-		scn=context.scene
-		
-		
-		found_crowd=False
-		#Check for crowd object
-		if context.mode=='EDIT_MESH':
-			ob=context.object
-			bm=bmesh.from_edit_mesh(ob.data)
-			found_object=ob
-			print(found_object)
-		else:
-			bm=bmesh.new()
-			for ob in scn.objects:
-				if ob.name=='crowd':
-					#ob=bpy.context.object
-					found_object=ob
-					bm.from_mesh(ob.data)
-					found_crowd=True
-					break
-			
-			
-		try:
-			print(found_object)
-		except:
-			print('Object not found')
-			
-		
-		print(bm)
-		cursor_loc=Vector((scn.cursor_location[0],scn.cursor_location[1],scn.cursor_location[2]))
-		for i in range(v_num):
-			for j in range(h_num):
-				bm.faces.new((bm.verts.new(Vector((cursor_loc[0]+0.01,cursor_loc[1]+0.01,cursor_loc[2]-0.01))),
-							bm.verts.new(Vector((cursor_loc[0]-0.01,cursor_loc[1]+0.01,cursor_loc[2]-0.01))),
-							bm.verts.new(Vector((cursor_loc[0]-0.01,cursor_loc[1]-0.01,cursor_loc[2]+0.01))),
-							bm.verts.new(Vector((cursor_loc[0]+0.01,cursor_loc[1]-0.01,cursor_loc[2]+0.01))))
-							)
-				
-				cursor_loc[0]-=h_dist*0.01
-			cursor_loc[0]=scn.cursor_location[0]
-			cursor_loc[1]+=gap*0.01
-			cursor_loc[2]-=v_dist*0.01
-				
-		bm.normal_update()
-		
-		
-		
-		
-		if found_crowd==False and context.mode=='OBJECT':
-			me=bpy.data.meshes.new('crowd')
-			bm.to_mesh(me)
-			ob=bpy.data.objects.new('crowd',me)
-			context.scene.objects.link(ob)
-		elif found_crowd==True: 
-			bm.to_mesh(found_object.data)
-		elif context.mode=='EDIT_MESH':
-			bmesh.update_edit_mesh(found_object.data)
-			
-			
-		
-		
-		bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
 	
-	
-		
-	def crowd_groups(name):
-		scn=bpy.context.scene
-		ob=bpy.context.object
-		
-		bm=bmesh.from_edit_mesh(ob.data)
-	   
-	   
-		#populate vertex list with selected vertices
-		vxlist=[]
-		for v in bm.verts:
-			if v.select==True:
-				vxlist.append(v.index)
-		bm.free()
-		bpy.ops.object.editmode_toggle()
-		 
-		if not name in ob.vertex_groups:
-			ob.vertex_groups.new(name)
-		
-		for g in ob.vertex_groups:
-			if g.name==name:
-				ob.vertex_groups[name].add(vxlist,1,'ADD')
-			else:
-				ob.vertex_groups[g.name].add(vxlist,1,'SUBTRACT')		  
-
-	def write_offsets_to_file(f,offset_list):
-		#Calculate file size
-		size=0
-		for off in offset_list:
-			size+=off[2]+16
-		
-		#File Header
-		f.write(struct.pack('<4I',1815304274,4,size+16,len(offset_list)))
-		for i in offset_list:
-			f.write(struct.pack('<4I',i[0],i[1],i[2],0))
-		
 	
 	def group_bbox(group):
 		mins=[[],[],[]]
@@ -753,372 +728,42 @@ class fifa_helper:
 			
 		return ((min(mins[0]),min(mins[1]),min(mins[2])),(max(maxs[0]),max(maxs[1]),max(maxs[2])))
 	
-	def object_bbox(object):
-		
-		#Matrices
-		rot_x_mat=Matrix.Rotation(radians(-90),4,'X')
-		scale_mat=Matrix.Scale(1000,4)
-		
-		#Getters
-		getz=operator.itemgetter(2)
-		gety=operator.itemgetter(1)
-		getx=operator.itemgetter(0)
-		
-		bv_list=[]
-		for j in object.bound_box:
-			#Object Matrices
-			bbox=Vector()
-			bbox[0]=j[0]
-			bbox[1]=j[1]
-			bbox[2]=j[2]
-			
-			object_matrix_wrld=object.matrix_world
-			bbox=rot_x_mat*scale_mat*object_matrix_wrld*(bbox)
-			
-			bv_list.append((bbox[2],bbox[1],bbox[0]))
-			
-		print(bv_list)
-		
-		#Returned Vectors
-		bbox1=Vector()
-		bbox2=Vector()
-		
-		#get min values
-		bbox1[0]=min(bv_list,key=getz)[2]
-		bbox1[1]=min(bv_list,key=gety)[1]
-		bbox1[2]=min(bv_list,key=getx)[0]
-		
-		#get max values
-		bbox2[0]=max(bv_list,key=getz)[2]
-		bbox2[1]=max(bv_list,key=gety)[1]
-		bbox2[2]=max(bv_list,key=getx)[0]
-		
-		
-		return bbox1,bbox2
-
-
-	def paint_faces(object,color,layer_name):
-		bm=bmesh.from_edit_mesh(object.data)
-		collayer=bm.loops.layers.color[layer_name]
-		for f in bm.faces:
-			if f.select==True:
-				for l in f.loops:
-					l[collayer]=color
-		bmesh.update_edit_mesh(object.data, True)
-	
-	def auto_paint_mesh(object,layer_name):
-		scn=bpy.context.scene
-		bm=bmesh.new()
-		bm.from_mesh(object.data)
-		bm.normal_update()
-		#base_0=0.498
-		#base_1=0.502
-		
-		obj_rotation=object.rotation_euler
-		print(obj_rotation)
-		collayer=bm.loops.layers.color[layer_name]
-		
-		for f in bm.faces:
-			for l in f.loops:
-				vert=l.vert
-				
-				#rot=Euler((-1.5707963705062866, 0.0, 0.0), 'XYZ')
-				norm=vert.normal
-				#norm.rotate(obj_rotation)
-				norm.normalize()
-				
-				#norm.rotate(rot)
-				
-				if scn.autopaint_modes=='0':
-					l[collayer][0]=norm_to_col(round(-norm[1],3),0)
-					l[collayer][1]=norm_to_col(round(norm[2],3),2)
-					l[collayer][2]=norm_to_col(round(norm[0],3),1)
-				elif scn.autopaint_modes=='1':
-					l[collayer][0]=norm_to_col(round(-norm[0],3),0)
-					l[collayer][1]=norm_to_col(round(-norm[2]*0.00068,3),0)
-					l[collayer][2]=norm_to_col(round(-norm[1],3),1)
-			
-		bm.to_mesh(object.data)
-		bm.free() 
 	
 
-	def norm_to_col(x,axis):
-		#converting normal Vector to Color Information
-		#Arguments:
-		#x:	normal Vector
-		#axis: desired axis
-		
-		try:
-			angle=Vector((x,0)).angle_signed(Vector((1,0)))
-		except:
-			angle=0    
-		
-		if angle<=0:
-		
-		
-			if x==-1:
-				return 0.502
-			elif  -1<x<0:
-				return -0.502*x
-			elif 1>=x>=0:
-				return 0.498*x
-		else:
-			if x==-1:
-				return 0.502
-			elif  -1<x<0:
-				return 0.498*x+1
-			elif 1>=x>=0:
-				return -0.502*x+1   
 	
 	
-	
-	def write_offset_data_to_file(f,path,offset_list,object_list,materials_list,materials_dict,textures_list,group_list,prop_list,collision_list):
-		#Local Variables
-		object_count=len(object_list)
-		texture_count=len(textures_list)
-		for i in range(len(offset_list)):
-			f.seek(offset_list[i][1])
-			if offset_list[i][0]==582139446:
-				f.write(struct.pack('<4I',object_count,0,0,0))
-				for j in range(object_count):
-					if object_list[j][1]>65535:
-						ind_size=4
-					else:
-						ind_size=2
-					f.write(struct.pack('<4I',size_round(object_list[j][2]*ind_size+16),object_list[j][2],ind_size,0))
-			elif offset_list[i][0]==3263271920: #mesh description
-				id=offset_list[i][3]
-				f.write(struct.pack('<4I',offset_list[i][2],len(object_list[id][6])+1,0,0))
-				s = bytes(object_list[id][6], 'utf-8')
-				f.write(s) 
-			elif offset_list[i][0]==685399266: # PROP POSITIONS
-				id=offset_list[i][3]
-				f.write(struct.pack('<Ifff',offset_list[i][2],prop_list[id][1][0],prop_list[id][1][1],prop_list[id][1][2]))
-				f.write(struct.pack('<fffI',prop_list[id][2][0],prop_list[id][2][1],prop_list[id][2][2],0))
-			elif offset_list[i][0]==1285267122: #PROPS
-				#header
-				f.write(struct.pack('<4I',offset_list[i][2],len(prop_list)+len(textures_list)+len(object_list),0,0))
-				#data
-				for j in range(len(prop_list)):
-					f.write(struct.pack('<2I',685399266,len(prop_list[j][0])+1))
-					s = bytes(prop_list[j][0], 'utf-8')
-					f.write(s)
-					f.write(b'\x00')
-				for j in range(len(object_list)):
-					f.write(struct.pack('<2I',3566041216,len(object_list[j][0])+1))
-					s = bytes(object_list[j][0], 'utf-8')
-					f.write(s)
-					f.write(b'\x00')
-				for j in range(len(textures_list)):
-					f.write(struct.pack('<I',2047566042))
-					
-					if type(textures_list[j])==type(''):
-						s = bytes(textures_list[j], 'utf-8')
-						f.write(struct.pack('<I',len(textures_list[j])+1))
-					
-					elif type(textures_list[j][0])==type(''):
-						#print('textures')
-						s = bytes(textures_list[j][0], 'utf-8')
-						f.write(struct.pack('<I',len(textures_list[j][0])+1))
-					
-					f.write(s)
-					f.write(b'\x00')
-				
-				
-				
-				
-			elif offset_list[i][0]==5798132: #INDICES
-				id=offset_list[i][3]
-				#header
-				if object_list[id][1]>65535:
-					ind_size=4
-				else:
-					ind_size=2
-				f.write(struct.pack('<4I',size_round(object_list[id][2]*ind_size+16),object_list[id][2],ind_size,0))  
-				#data
-				write_indices(f,object_list[id][11])
-			elif offset_list[i][0]==5798561: #VERTICES
-				id=offset_list[i][3]
-				#header
-				f.write(struct.pack('<4I',offset_list[i][2],object_list[id][1],object_list[id][8],1))
-				#data
-				convert_mesh_to_bytes(f,object_list[id][7],object_list[id][1],object_list[id][9],object_list[id][10],object_list[id][4])
-			elif offset_list[i][0]==3566041216: #80......
-				f.write(struct.pack('<4I',4,0,0,0))
-			elif offset_list[i][0]==230948820: #GROUPS
-				id=offset_list[i][3]
-				#print(id,len(group_list))
-				#header
-				data=f.write(struct.pack('<4I',offset_list[i][2],1,0,0))	
-				#data
-				if id>=len(group_list):
-					s = bytes('CollisionGeometry', 'utf-8')
-					data+=f.write(s)
-					data+=f.write(b'\x00')
-					data+=f.write(struct.pack('B',id)) 
-				else:
-					s = bytes(group_list[id][0][5:], 'utf-8')
-					f.write(s)	
-					f.write(b'\x00')
-					f.write(struct.pack('B',id)) 
-			elif offset_list[i][0]==123459928:
-				id=offset_list[i][3]
-				#material header
-				f.write(struct.pack('<4I',offset_list[i][2],len(materials_dict[materials_list[id]][3]),0,0))
-				#data
-				#material_name
-				#print(materials_dict[materials_list[id]][1])
-				s=bytes(materials_dict[materials_list[id]][1],'utf-8')
-				f.write(s)
-				f.write(b'\x00')
-				#textures
-				for j in range(len(materials_dict[materials_list[id]][2])):
-					s=bytes(materials_dict[materials_list[id]][3][j],'utf-8')
-					f.write(s)
-					f.write(b'\x00')
-					#print(textures_list.index(materials_dict[materials_list[id]][2][j]))
-					f.write(struct.pack('I',textures_list.index(materials_dict[materials_list[id]][2][j])))
-			elif offset_list[i][0]==2116321516: #RENDERLINES
-				id=offset_list[i][3]
-				#renderline header
-				f.write(struct.pack('<4I',offset_list[i][2],1,4294967295,0))
-				#renderline data
-				f.write(struct.pack('<4f',1,0,0,0))
-				f.write(struct.pack('<4f',0,1,0,0))
-				f.write(struct.pack('<4f',0,0,1,0))
-				f.write(struct.pack('<4f',0,0,0,1))
-				f.write(struct.pack('<4f',group_list[id][1][0],group_list[id][1][1],group_list[id][1][2],1))
-				f.write(struct.pack('<4f',group_list[id][2][0],group_list[id][2][1],group_list[id][2][2],1))
-				f.write(struct.pack('<2I',group_list[id][3],4294967295))
-				object_offset=group_list[id][4]
-				for j in range(group_list[id][3]):
-					f.write(struct.pack('<4f',object_list[object_offset+j][5][0][0],object_list[object_offset+j][5][0][1],object_list[object_offset+j][5][0][2],1))
-					f.write(struct.pack('<4f',object_list[object_offset+j][5][1][0],object_list[object_offset+j][5][1][1],object_list[object_offset+j][5][1][2],1))
-					f.write(struct.pack('<2I',object_offset+j,object_list[object_offset+j][13]))
-			elif offset_list[i][0]==4034198449: #COLLISIONS
-				id=offset_list[i][3]
-				f.write(struct.pack('4I',offset_list[i][2],1,0,0))
-				s=bytes(collision_list[id][2],'utf-8')
-				f.write(s)
-				f.write(b'\x00')
-				f.write(struct.pack('I',1))
-				f.write(struct.pack('I',collision_list[id][0]))
-				for i in range(len(collision_list[id][1])):
-					f.write(struct.pack('<3f',collision_list[id][1][i][0],collision_list[id][1][i][1],collision_list[id][1][i][2]))
-				
-			elif offset_list[i][0]==1808827868:
-				f.write(struct.pack('<4I',texture_count,0,0,0))
-				id=0
-				for tex in textures_list:
-					if tex[7]=='DXT5':
-						id=2
-					f.write(struct.pack('<IBBHHHHH',tex[6],1,id,1,tex[3],tex[4],1,tex[5]))
-			elif offset_list[i][0]==2047566042:
-				id=offset_list[i][3]
-				#texture writing
-				ext_len=len(textures_list[id][1].split(sep='\\')[-1].split(sep='.')[-1])
-				
-				t=open(path+textures_list[id][1].split(sep='\\')[-1][0:-1-ext_len]+'.dds','rb')
-				
-				#Get ready to write
-				divider=1
-				comp_id=0
-				w=textures_list[id][3]
-				h=textures_list[id][4]
-				phys_size=w*h
-				mipmaps=textures_list[id][5]
-				if textures_list[id][7]=='DXT1':
-					divider=2
-					multiplier=2
-				if textures_list[id][7]=='DXT5':
-					comp_id=2
-					multiplier=4
-				t.seek(128)
-				
-				#Write texture
-				#header
-				f.write(struct.pack('<IBBHHHHH',textures_list[id][6],1,comp_id,1,textures_list[id][3],textures_list[id][4],1,textures_list[id][5]))
-				#data
-				size=phys_size
-				for j in range(mipmaps):
-					tw=size//(w*multiplier*divider)
-					f.write(struct.pack('<4I',w*multiplier,tw,w*multiplier*tw,0))
-					f.write(t.read(tw*w*multiplier))
-					#print(tw)
-					w=w//2
-					size=size//4
-				t.close()
-			
-
-
 ##TEXTURE FUNCTIONS
 
 
-def texture_convert(textures_list):
-	status=''
-	for tex in textures_list:
-		if tex[2]:
-			comp='-dxt5'
-		else:
-			comp='-dxt1a'
+	def texture_convert(textures_list):
+		status=''
+		for tex in textures_list:
+			if tex[2]:
+				comp='-dxt5'
+			else:
+				comp='-dxt1a'
+			
+			if tex[8]>=2048:
+				nmips=10
+			elif tex[8]>=512:
+				nmips=3
+			else:
+				nmips=1
+			
+			
+			if tex[1].split(sep='.')[-1]=='.dds':
+				copyfile(tex[1],'./fifa_tools'+tex[1].split(sep='\\')[-1].split(sep='.')[0]+'.dds')
+			else:	
+				status=call(['./fifa_tools/nvidia_tools/nvdxt.exe','-file',tex[1],comp,'-nmips',str(nmips),'-outdir','./fifa_tools','-quality_production','-output',tex[1].split(sep='\\')[-1].split(sep='.')[0]+'.dds'])
+			
+			if status==4294967294:
+				return 'texture_path_error,'+tex[1]
 		
-		if tex[8]>=2048:
-			nmips=10
-		elif tex[8]>=512:
-			nmips=3
-		else:
-			nmips=1
 		
-		
-		if tex[1].split(sep='.')[-1]=='.dds':
-			copyfile(tex[1],'./fifa_tools'+tex[1].split(sep='\\')[-1].split(sep='.')[0]+'.dds')
-		else:	
-			status=call(['./fifa_tools/nvidia_tools/nvdxt.exe','-file',tex[1],comp,'-nmips',str(nmips),'-outdir','./fifa_tools','-quality_production','-output',tex[1].split(sep='\\')[-1].split(sep='.')[0]+'.dds'])
-		
-		if status==4294967294:
-			return 'texture_path_error,'+tex[1]
-	
-	
-	return str(status)
+		return str(status)
 			
 
-	def read_converted_textures(offset_list,textures_list,path):
-		offset_list.append((1808827868,len(textures_list)*16+48,len(textures_list)*16+16))
-		
-		for k in range(len(textures_list)):
-			ext_len=len(textures_list[k][1].split(sep='\\')[-1].split(sep='.')[-1])
-			
-			t=open(path+textures_list[k][1].split(sep='\\')[-1][0:-ext_len-1]+'.dds','rb')
-			textures_list[k][3],textures_list[k][4],textures_list[k][5],textures_list[k][7]=read_dds_info(t) #store width,height,mipmaps,type
-			t.close()
-			print(textures_list[k][3],textures_list[k][4],textures_list[k][5],textures_list[k][7])
-			
-			phys_size=textures_list[k][3]*textures_list[k][4]
-			divider=1
-			
-			size=0
-			w=textures_list[k][3]
-			h=textures_list[k][4]
-			if textures_list[k][7]=='DXT1':
-				divider=2
-			
-			#Calculate Size
-			for i in range(textures_list[k][5]):
-				size=size+w*h//divider+16
-				w=w//2
-				h=h//2
-			
-			
-			textures_list[k][6]=size_round(size+16) #store size after calculation
-			offset_list.append((2047566042,offset_list[-1][1]+offset_list[-1][2],textures_list[k][6],k))
-		
-		size=16
-		for i in range(len(textures_list)):
-			size=size+len(textures_list[i][0])+9
-		
-		offset_list.append((1285267122,offset_list[-1][1]+offset_list[-1][2],size_round(size)))
-		
-		return offset_list,textures_list
+	
 		
 		
 

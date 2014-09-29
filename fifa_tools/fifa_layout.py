@@ -3,7 +3,7 @@ bl_info = {
 	"description": "RX3 Importer/Exporter",
 	"author": "arti-10",
 	"version": (0, 65,'beta'),
-	"blender": (2, 67, 0),
+	"blender": (2, 71, 0),
 	"location": "View3D > Scene",
 	"warning": "", # used for warning icon and text in addons panel
 	"wiki_url": "",

@@ -13,6 +13,7 @@ fifa_func_path='fifa_tools\\scripts\\fifa_functions.py'
 fifa_func=imp.load_source('fifa_func',fifa_func_path)
 #fifa_func=imp.load_compiled('fifa_func','fifa_tools\\scripts\\fifa_functions.pyc')
 helper=fifa_func.general_helper()
+tex_helper=fifa_func.texture_helper()
 
 
 
@@ -116,7 +117,7 @@ class align_crowd_faces(bpy.types.Operator) :
 		
 		align_vector=vec_dict[int(scn.crowd_align_enum)]
 		
-		fifa_func.crowd_seat_align(align_vector)
+		fifa_main.crowd_seat_align(align_vector)
 		
 		
 		return{'FINISHED'}
@@ -142,7 +143,7 @@ class crowd_create_seats(bpy.types.Operator):
 	
 	def execute(self,context):
 		
-		fifa_func.crowd_seat_create(self.crowd_vertical_seats,self.crowd_horizontal_seats,self.crowd_vertical_distance,self.crowd_horizontal_distance,self.crowd_gap_distance,context)
+		fifa_main.crowd_seat_create(self.crowd_vertical_seats,self.crowd_horizontal_seats,self.crowd_vertical_distance,self.crowd_horizontal_distance,self.crowd_gap_distance,context)
 		
 		return {'FINISHED'}
 	
@@ -153,7 +154,7 @@ class assign_crowd_type(bpy.types.Operator) :
 	bl_description='Click to assign selected vertices to the selected crowd type'
 	def invoke(self, context, event) :
 		scn=bpy.context.scene
-		fifa_func.crowd_groups(scn.crowd_type_enum)
+		fifa_main.crowd_groups(scn.crowd_type_enum)
 		
 		return{'FINISHED'}
 				
@@ -165,7 +166,7 @@ class colour_assign(bpy.types.Operator) :
 	def invoke(self, context, event) :
 		scn=context.scene
 		try:
-			scn.vx_color=fifa_func.hex_to_rgb(scn.vx_color_hex)
+			scn.vx_color=helper.hex_to_rgb(scn.vx_color_hex)
 		except:
 			self.report({'ERROR'},'Malformed hex color')
 		return{'FINISHED'}
@@ -175,7 +176,7 @@ class get_color(bpy.types.Operator):
 	bl_label='Get Color'
 	def invoke(self,context,event):
 		scn=context.scene
-		scn.vx_color_hex=fifa_func.rgb_to_hex((scn.vx_color.r*255,scn.vx_color.g*255,scn.vx_color.b*255))
+		scn.vx_color_hex=helper.rgb_to_hex((scn.vx_color.r*255,scn.vx_color.g*255,scn.vx_color.b*255))
 		return{'FINISHED'}
 
 class assign_color_to_map(bpy.types.Operator):
@@ -190,7 +191,7 @@ class assign_color_to_map(bpy.types.Operator):
 			self.report({'ERROR'},'No active color layer')
 			return{'CANCELLED'}
 		
-		fifa_func.paint_faces(object,scn.vx_color,active_color_layer.name)
+		helper.paint_faces(object,scn.vx_color,active_color_layer)
 		return{'FINISHED'}
 
 class auto_paint(bpy.types.Operator):
@@ -210,7 +211,7 @@ class auto_paint(bpy.types.Operator):
 			self.report({'ERROR'},'Should be in Object Mode')
 			return{'CANCELLED'}
 		
-		fifa_func.auto_paint_mesh(object,active_color_layer)
+		helper.auto_paint_mesh(object,active_color_layer)
 		
 		return{'FINISHED'}
 
@@ -712,7 +713,7 @@ class file_import(bpy.types.Operator) :
 		if not scn.crwd_import_path=='':
 			
 			#INIT FILE
-			f=fifa_main.file_init(scn.crwd_import_path)
+			f=fifa_main.fifa_rx3(scn.crwd_import_path)
 			if f.__class__.__name__=='str':
 				self.report({'ERROR'},'File Error')
 				return {'CANCELLED'}
@@ -780,7 +781,7 @@ class file_import(bpy.types.Operator) :
 				
 			clog.close()
 			crowd_name=fifa_main.createmesh(crowd_verts,crowd_faces,[],f.type,0,f.id,'crowd',[],False,[])
-			fifa_func.crowd_col(crowd_name,crowd_col) #Add the color layer
+			helper.crowd_col(crowd_name,crowd_col,'seat_colors') #Add the color layer
 			
 			
 			#Getting Crowd Types
@@ -861,7 +862,7 @@ class file_import(bpy.types.Operator) :
 		if not scn.lnx_import_path=='':
 			
 			#INIT FILE
-			f=fifa_main.file_init(scn.lnx_import_path)
+			f=fifa_main.fifa_rx3(scn.lnx_import_path)
 			if f.__class__.__name__=='str':
 				self.report({'ERROR'},'File Error')
 				return {'CANCELLED'}
@@ -906,6 +907,7 @@ class file_import(bpy.types.Operator) :
 						  
 		return {'FINISHED'}
 
+		
 ###TEXTURE EXPORT OPERATOR### WORKS FOR THE EXPORTER ONLY, WILL BE USED FOR THE OVERWRITER AS WELL
 class texture_export(bpy.types.Operator):
 	bl_idname='mesh.texture_export'
@@ -988,7 +990,7 @@ class texture_export(bpy.types.Operator):
 				
 				if head_found:
 					#COMMON PROCEDURE
-					texture_dict,textures_list,status=fifa_main.get_textures_list(object)
+					texture_dict,textures_list,status=tex_helper.get_textures_list(object)
 					if status=='material_missing': #check for missing material
 						self.report({'ERROR'},'Missing Face Material')
 						return {'CANCELLED'}
@@ -1056,12 +1058,6 @@ class texture_export(bpy.types.Operator):
 					return {'CANCELLED'}
 				elif status=='success':
 					self.report({'INFO'},'Textures exported Successfully')
-				
-			
-				
-		
-		
-		
 		return {'FINISHED'}
 
 		
