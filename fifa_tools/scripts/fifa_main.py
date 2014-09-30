@@ -1,7 +1,7 @@
 import bpy,imp,os,struct,bmesh,zlib
-fifa_func_path='fifa_tools\\scripts\\fifa_functions.py'
-fifa_func=imp.load_source('fifa_func',fifa_func_path)
-#fifa_func=imp.load_compiled('fifa_func','fifa_tools\\scripts\\fifa_functions.pyc')
+#fifa_func_path='fifa_tools\\scripts\\fifa_functions.py'
+#fifa_func=imp.load_source('fifa_func',fifa_func_path)
+fifa_func=imp.load_compiled('fifa_func','fifa_tools\\scripts\\fifa_functions.pyc')
 from mathutils import Vector,Euler,Matrix
 from math import radians
 from subprocess import call

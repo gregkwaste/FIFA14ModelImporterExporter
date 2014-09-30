@@ -9,9 +9,9 @@ from xml.dom import minidom
 fifa_main_path='fifa_tools\\scripts\\fifa_main.py'
 fifa_main=imp.load_source('fifa_main',fifa_main_path)
 #fifa_main=imp.load_compiled('fifa_main','fifa_tools\\scripts\\fifa_main.pyc')
-fifa_func_path='fifa_tools\\scripts\\fifa_functions.py'
-fifa_func=imp.load_source('fifa_func',fifa_func_path)
-#fifa_func=imp.load_compiled('fifa_func','fifa_tools\\scripts\\fifa_functions.pyc')
+#fifa_func_path='fifa_tools\\scripts\\fifa_functions.py'
+#fifa_func=imp.load_source('fifa_func',fifa_func_path)
+fifa_func=imp.load_compiled('fifa_func','fifa_tools\\scripts\\fifa_functions.pyc')
 helper=fifa_func.general_helper()
 tex_helper=fifa_func.texture_helper()
 from fifa_main import sig
