@@ -181,7 +181,8 @@ class general_helper:
 		hvx=comp.compress(round(co[0],8))
 		hvy=comp.compress(round(co[1],8))
 		hvz=comp.compress(round(co[2],8))
-		f.write(struct.pack('<HHHH',hvx,hvy,hvz,0))
+		f.write(struct.pack('<HHH',hvx,hvy,hvz))
+		f.seek(2,1)
 	
 	def read_string(self,f):
 		c=''

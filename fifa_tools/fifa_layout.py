@@ -19,10 +19,11 @@ fifa_operators=imp.load_source('fifa_operators',fifa_operators_path)
 from fifa_operators import light_props as light_props
 version_text='v'+str(version[0]) + '.' + str(version[1]) + ', made by arti-10'
 game_version=" 15 "
+dev_status=1
 
 
 
-###VERTEX GROUP PANEL
+###VERTEX GROUP PANEL###
 class CrowdSection(bpy.types.Panel):
 	"""Creates a Panel in the Object properties window"""
 	bl_label = "FIFA 3D IE - Stadium Crowd Tools"
@@ -363,16 +364,15 @@ class FifaExporter(bpy.types.Panel):
 		row=col.row()
 		row.prop(scn, 'export_path')
 		
+		#Export row
 		row=col.row()
 		row.operator('mesh.texture_export')
-		
 		if scn.face_edit_flag:
-			txt="FACE EXPORT"
+			txt="FACE MODEL EXPORT"
 		else:
 			txt="OVERWRITE"
-		
 		row.operator("mesh.fifa_overwrite",text=txt)
-		
+		if scn.face_edit_flag and scn.gen_overwriter_flag: row.enabled=False
 		
 		
 		row=layout.row()
@@ -567,6 +567,34 @@ class FifaImporter(bpy.types.Panel):
 		row.operator("system.visit_url",text='Visit Official Thread',emboss=False)
 
 
+if dev_status:
+	class DeveloperPanel(bpy.types.Panel):
+		"""Creates a Panel in Scene properties window"""
+		bl_label = "FIFA" + game_version + "Developer Panel"
+		bl_idname = "FIFA_DEV_PANEL"
+		bl_space_type = 'PROPERTIES'
+		bl_region_type = 'WINDOW'
+		bl_context = "scene"
+		
+		def draw(self,context):
+			scn=context.scene
+			
+			layout = self.layout
+			box=layout.box()
+			box.label(icon='INFO',text='Bath Importer')
+			row=box.row()
+			row.prop(scn,'batch_import_path')
+			row=box.row()
+			row.prop(scn,'batch_radius')
+			row=box.row()
+			row.operator("mesh.batch_import",text="BATCH IMPORT")
+			
+			
+			
+		
+
+
+		
 
 ###SCENE CUSTOM PROPERTIES###
 
@@ -784,6 +812,29 @@ default=False
 bpy.types.Scene.export_path=bpy.props.StringProperty(
 name="Export Directory",
 subtype='DIR_PATH'
+)
+
+bpy.types.Scene.fifa_import_loc=bpy.props.FloatVectorProperty(
+name='Import Location',
+default=(0.0,0.0,0.0)
+)
+
+
+
+#development mode props
+bpy.types.Scene.batch_import_path=bpy.props.StringProperty(
+name="Batch Import Path",
+subtype='DIR_PATH'
+)
+
+
+
+
+bpy.types.Scene.batch_radius=bpy.props.IntProperty(
+name='Radius',
+default=0,
+min=0,
+max=100
 )
 
 

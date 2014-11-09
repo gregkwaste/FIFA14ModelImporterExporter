@@ -471,11 +471,15 @@ class file_import(bpy.types.Operator) :
 						continue
 					
 					slot=new_mat.texture_slots.add()
+					name_fixed=name.split(sep='.')[0:len(name.split(sep='.'))-1]
+					name_fixed='.'.join(name_fixed)
+					#print(name_fixed)
 					
-					if name in bpy.data.textures:
-						new_tex=bpy.data.textures[name]
+					if name_fixed in bpy.data.textures:
+						new_tex=bpy.data.textures[name_fixed]
 					else:	
-						new_tex=bpy.data.textures.new(name,type='IMAGE')
+						new_tex=bpy.data.textures.new(name_fixed,type='IMAGE')
+						
 					
 					new_tex.image=bpy.data.images.load(dir+'\\'+name)
 						
@@ -533,7 +537,7 @@ class file_import(bpy.types.Operator) :
 					sub_name=f.type+'_'+str(f.id)+'_'+str(i)
 					if f.type=='head':
 						sub_name+='_'+f.sub_names[i]
-					obname=fifa_main.createmesh(f.vxtable[i],f.itable[i],f.uvs[i],f.type,objectcount,f.id,sub_name,f.cols[i],False,[])
+					obname=fifa_main.createmesh(f.vxtable[i],f.itable[i],f.uvs[i],f.type,objectcount,f.id,sub_name,f.cols[i],False,[],scn.fifa_import_loc)
 					objectcount+=1
 					#Create Vertex Groups Based on BONES
 					if scn.bone_groups_flag:
@@ -676,7 +680,7 @@ class file_import(bpy.types.Operator) :
 			if scn.collision_flag==True:
 				collisioncount=0
 				for collision in f.collisions:
-					obname=fifa_main.createmesh(collision[1],collision[2],[],collision[0],collisioncount,f.id,'',[],False,[])
+					obname=fifa_main.createmesh(collision[1],collision[2],[],collision[0],collisioncount,f.id,'',[],False,[],scn.fifa_import_loc)
 					#bpy.data.objects[obname].scale=Vector((0.01,0.01,0.01))
 					collisioncount+=1
 			
@@ -690,17 +694,6 @@ class file_import(bpy.types.Operator) :
 			present_ob_list=set(bpy.data.objects)
 			
 			ob=list(present_ob_list-past_ob_list)[0]
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
 			
 			
 #	try:
@@ -780,7 +773,7 @@ class file_import(bpy.types.Operator) :
 				count+=4
 				
 			clog.close()
-			crowd_name=fifa_main.createmesh(crowd_verts,crowd_faces,[],f.type,0,f.id,'crowd',[],False,[])
+			crowd_name=fifa_main.createmesh(crowd_verts,crowd_faces,[],f.type,0,f.id,'crowd',[],False,[],scn.fifa_import_loc)
 			helper.crowd_col(crowd_name,crowd_col,'seat_colors') #Add the color layer
 			
 			
@@ -862,7 +855,7 @@ class file_import(bpy.types.Operator) :
 		if not scn.lnx_import_path=='':
 			
 			#INIT FILE
-			f=fifa_main.fifa_rx3(scn.lnx_import_path)
+			f=fifa_main.fifa_rx3(scn.lnx_import_path,0)
 			if f.__class__.__name__=='str':
 				self.report({'ERROR'},'File Error')
 				return {'CANCELLED'}
@@ -924,15 +917,18 @@ class texture_export(bpy.types.Operator):
 			for item in bpy.data.objects:
 				if (scn.stadium_export_flag and item.type=='EMPTY' and item.name[0:5]=='stad_') or (scn.trophy_export_flag and item.type=='EMPTY' and item.name in ['BALL','TROPHY']):
 					for child_item in item.children:
-						texture_dict,textures_list,status=tex_helper.get_textures_list(child_item)
+						item_texture_dict,item_textures_list,status=tex_helper.get_textures_list(child_item)
+						texture_dict.update(item_texture_dict)
+						textures_list+=item_textures_list
 						if status=='material_missing':
 							self.report({'ERROR'},'Missing Material')
 							return {'CANCELLED'}
 			
 			if scn.trophy_export_flag: type='trophy-ball_' #fix file naming for trophy or ball
+			if scn.stadium_export_flag: type='stadium'
 			
 			#Convert Textures to DDS
-			status=fifa_main.write_textures_to_file(textures_list,type)
+			status=fifa_main.write_textures_to_file(textures_list,type,scn.file_id)
 			if status=='missing_texture_file':
 				self.report({'ERROR'},'Missing '+status.split(sep=',')[1]+' Texture File')
 				return {'CANCELLED'}
@@ -957,7 +953,7 @@ class texture_export(bpy.types.Operator):
 				return {'CANCELLED'}
 				
 			#Convert Textures to DDS
-			status=fifa_main.write_textures_to_file(textures_list,type)
+			status=fifa_main.write_textures_to_file(textures_list,type,id)
 			if status=='missing_texture_file':
 				self.report({'ERROR'},'Missing '+status.split(sep=',')[1]+' Texture File')
 				return {'CANCELLED'}
@@ -1001,7 +997,7 @@ class texture_export(bpy.types.Operator):
 					
 					type='face' #override correct texture file type
 					#Convert Textures to DDS
-					status=fifa_main.write_textures_to_file(textures_list,type)
+					status=fifa_main.write_textures_to_file(textures_list,type,id)
 					if status=='missing_texture_file':
 						self.report({'ERROR'},'Missing '+status.split(sep=',')[1]+' Texture File')
 						return {'CANCELLED'}
@@ -1024,14 +1020,14 @@ class texture_export(bpy.types.Operator):
 				
 				if eyes_found:
 					#COMMON PROCEDURE
-					texture_dict,textures_list,status=fifa_main.get_textures_list(object)
+					texture_dict,textures_list,status=tex_helper.get_textures_list(object)
 					if status=='material_missing': #check for missing material
 						self.report({'ERROR'},'Missing Eyes Material')
 						return {'CANCELLED'}
 					
 					type='eyes' #override correct texture file type
 					#Convert Textures to DDS
-					status=fifa_main.write_textures_to_file(textures_list,type)
+					status=fifa_main.write_textures_to_file(textures_list,type,id)
 					if status=='missing_texture_file':
 						self.report({'ERROR'},'Missing '+status.split(sep=',')[1]+' Texture File')
 						return {'CANCELLED'}
@@ -1039,9 +1035,13 @@ class texture_export(bpy.types.Operator):
 						self.report({'INFO'},'Textures exported Successfully')
 				
 			if scn.face_edit_hair_flag:
-				name=scn.hair_import_path.split(sep='\\')[-1].split(sep='.')[0]
-				id=name.split(sep='_')[1]
-				type=name.split(sep='_')[0]
+				try:
+					name=scn.hair_import_path.split(sep='\\')[-1].split(sep='.')[0]
+					id=name.split(sep='_')[1]
+					type=name.split(sep='_')[0]
+				except:
+					self.report({'ERROR'},'Please select the original hair file in the Main Model Path')
+					return {'CANCELLED'}	
 				
 				#EXPORT HAIR TEXTURES
 				try:
@@ -1050,13 +1050,13 @@ class texture_export(bpy.types.Operator):
 					self.report({'ERROR'},'Hair Part not found')
 					return {'CANCELLED'}
 					
-				texture_dict,textures_list,status=fifa_main.get_textures_list(object)
+				texture_dict,textures_list,status=tex_helper.get_textures_list(object)
 				if status=='material_missing': #check for missing material
 					self.report({'ERROR'},'Missing Material')
 					return {'CANCELLED'}
 				
 				#Convert Textures to DDS
-				status=fifa_main.write_textures_to_file(textures_list,type)
+				status=fifa_main.write_textures_to_file(textures_list,type,id)
 				if status=='missing_texture_file':
 					self.report({'ERROR'},'Missing '+status.split(sep=',')[1]+' Texture File')
 					return {'CANCELLED'}
@@ -1076,11 +1076,11 @@ class test_file_export(bpy.types.Operator) :
 		#offset_list=[]
 		#object_list=[]
 		#collision_list=[]
-		#materials_list=[]
+		#material_list=[]
 		#textures_list=[]
 		#group_list=[]
 		#prop_list=[]
-		#materials_dict={}
+		#material_dict={}
 		
 		#Calling Writing to file Functions
 		if scn.stadium_export_flag:	
@@ -1089,6 +1089,7 @@ class test_file_export(bpy.types.Operator) :
 			f=fifa_main.fifa_rx3(scn.export_path+'trophy-ball_'+str(scn.file_id)+'.rx3',1)
 		
 		for item in bpy.data.objects:
+			#stadium props handling
 			if scn.stadium_export_flag and item.type=='EMPTY' and item.name=='PROPS':
 				rot_x_mat=Matrix.Rotation(radians(-90),4,'X')
 				scale_mat=Matrix.Scale(1000,4)
@@ -1099,6 +1100,7 @@ class test_file_export(bpy.types.Operator) :
 					
 					
 					f.prop_list.append((child_item.name,(co[0],co[1],co[2]),rot))
+			#geometry objects handling (stadiums & balls & trophies)
 			if item.type=='EMPTY' and (item.name[0:5]=='stad_' or item.name=='TROPHY' or item.name=='BALL'):
 				#Skip if empty
 				print(item.name)
@@ -1115,7 +1117,7 @@ class test_file_export(bpy.types.Operator) :
 					f.group_list.append([item.name,[0,0,0],[0,0,0],len(item.children),group_object_offset])
 					#Get Group Bounding Box Values
 					
-					f.group_list[-1][1],f.group_list[-1][2]=fifa_func.group_bbox(item)
+					f.group_list[-1][1],f.group_list[-1][2]=helper.object_bbox(item)
 				
 				
 				print('Group Found: '+str(item.name))
@@ -1147,7 +1149,7 @@ class test_file_export(bpy.types.Operator) :
 						#Material and Texture Storing
 						try:
 							mat_name=child_item.material_slots[0].name
-							if not mat_name in f.materials_dict:
+							if not mat_name in f.material_dict:
 							
 							
 								#Covert material name
@@ -1227,10 +1229,10 @@ class test_file_export(bpy.types.Operator) :
 									size+=len(local_texture_name_list[i])
 									size+=5
 									
-								size=fifa_func.size_round(size)
+								size=helper.size_round(size)
 								#Material and texture Storage
-								f.materials_dict[mat_name]=(mat_name,local_mat_name,local_texture_list,local_texture_name_list,size)
-								f.materials_list.append(mat_name)
+								f.material_dict[mat_name]=(mat_name,local_mat_name,local_texture_list,local_texture_name_list,size)
+								f.material_list.append(mat_name)
 								
 								for i in range(len(local_texture_list)):
 									if not local_texture_list[i] in f.texture_list:
@@ -1239,16 +1241,16 @@ class test_file_export(bpy.types.Operator) :
 								try:
 									entry_diffuse=f.texture_list.index(local_texture_list[0])
 									#entry_ambient=f.texture_list.index(local_texture_list[1])
-									entry_material=f.materials_list.index(mat_name)
+									entry_material=f.material_list.index(mat_name)
 								except:
 									self.report({'ERROR'},'Missing Texture in '+str(child_item.name))
 									return {'CANCELLED'}
 								
 							else:
 								try:
-									entry_diffuse=f.texture_list.index(f.materials_dict[mat_name][2][0])
-									#entry_ambient=textures_list.index(f.materials_dict[mat_name][2][1])
-									entry_material=f.materials_list.index(mat_name)
+									entry_diffuse=f.texture_list.index(f.material_dict[mat_name][2][0])
+									#entry_ambient=textures_list.index(f.material_dict[mat_name][2][1])
+									entry_material=f.material_list.index(mat_name)
 								except:
 									self.report({'ERROR'},'Missing Texture in '+str(child_item.name))
 									return {'CANCELLED'}
@@ -1265,10 +1267,10 @@ class test_file_export(bpy.types.Operator) :
 					
 					f.object_list.append(entry)
 			
-			#Collision Checkers
+			#Collision Checkers (Stadiums Only)
 			if scn.stadium_export_flag and item.type=='MESH' and item.name[0:14]=='stad_Collision':
 				entry=[]
-				collision_tris_length,collision_verts_table,collision_part_name=fifa_func.convert_mesh_collisions(item)
+				collision_tris_length,collision_verts_table,collision_part_name=fifa_main.convert_mesh_collisions(item)
 				entry.append(collision_tris_length)
 				entry.append(collision_verts_table)
 				entry.append(collision_part_name)
@@ -1277,8 +1279,8 @@ class test_file_export(bpy.types.Operator) :
 		
 		#Adding InitianShading Group to material list
 		#if scn.stadium_export_flag:
-		#	materials_list.insert(7,'InitialShadinggroup')
-		#	materials_dict['InitialShadinggroup']=('InitialShadinggroup','InitialShadinggroup',[],[],48)
+		#	material_list.insert(7,'InitialShadinggroup')
+		#	material_dict['InitialShadinggroup']=('InitialShadinggroup','InitialShadinggroup',[],[],48)
 		
 			
 		
@@ -1294,7 +1296,7 @@ class test_file_export(bpy.types.Operator) :
 			#print(i[0],i[1],i[2],i[8])
 			#print(i[6],i[7])  
 		
-		#print(materials_dict)
+		#print(material_dict)
 		print(f.texture_list)
 		#print(group_list)
 		#print(prop_list)
@@ -1381,7 +1383,7 @@ class file_overwrite(bpy.types.Operator) :
 			except FileNotFoundError:
 				self.report({'ERROR'},'File Not Found')
 				return {'CANCELLED'}		
-			e=file_init(scn.export_path+'\\'+name) #open copied file
+			e=fifa_main.fifa_rx3(scn.export_path+'\\'+name,0) #open copied file
 			#check return codes
 			if e=='io_error':
 				self.report({'ERROR'},'File Error')
@@ -1393,15 +1395,20 @@ class file_overwrite(bpy.types.Operator) :
 				self.report({'ERROR'},'Illegal File')
 				return {'CANCELLED'}
 			
-			fifa_main.overwrite_geometry_data(e) #overwrite data
+			e.overwrite_geometry_data() #overwrite data
 		
 		#FACE EDITING MODE
 		if scn.face_edit_flag:
 			print('FACE EDITING MODE PROCEDURE \n')
 			parts=[]
+			status=0
 			if scn.face_edit_head_flag and scn.model_import_path:
 				parts.append(scn.model_import_path)
-			else:
+				status=1
+			if scn.face_edit_hair_flag and scn.hair_import_path:
+				parts.append(scn.hair_import_path)
+				status=1
+			if not status:
 				self.report({'ERROR'},'Please select the original head file in the Main Model Path')
 				return {'CANCELLED'}
 			if scn.face_edit_hair_flag and scn.hair_import_path:	
@@ -1410,7 +1417,8 @@ class file_overwrite(bpy.types.Operator) :
 			for path in parts:
 				name=path.split(sep='\\')[-1]
 				try:
-					copyfile(path,scn.export_path+'\\'+name)  #copy file to export directory
+					t=fifa_main.fifa_rx3(path,0)
+					copyfile(t.data.raw.name,scn.export_path+'\\'+name)  #copy file to export directory
 				except FileNotFoundError:
 					self.report({'ERROR'},'File Not Found')
 					return {'CANCELLED'}
@@ -1433,6 +1441,37 @@ class file_overwrite(bpy.types.Operator) :
 			print('Total Files Modified ',progress)
 		return {'FINISHED'}
 
+class batch_importer(bpy.types.Operator):
+	bl_idname="mesh.batch_import"
+	bl_label="Batch Import Models"
+	
+	def invoke(self,context,event):
+		scn=bpy.context.scene
+		path=scn.batch_import_path
+		
+		count=0
+		for fpath in os.listdir(path):
+			if len(fpath.split(sep=".rx3"))>1 and (not 'textures' in fpath):
+				count+=1
+		
+		step=float(360/count)
+		print('step: ',step)
+		count=0
+		for fpath in os.listdir(path):
+			vec=Vector((0,scn.batch_radius,0))
+			if len(fpath.split(sep=".rx3"))>1 and (not 'textures' in fpath):
+				eul=Euler()
+				eul.rotate_axis('Z',radians(count*step))
+				vec.rotate(eul)
+				scn.fifa_import_loc=vec
+				scn.fifa_import_loc[1] *= -1
+				print('importing model')
+				scn.model_import_path=path+fpath
+				scn.geometry_flag=True
+				bpy.ops.mesh.fifa_import('INVOKE_DEFAULT')
+				count+=1
+		return {'FINISHED'}
+		
 class group_add(bpy.types.Operator):
 	bl_idname = "system.add_stad_groups"
 	bl_label = "Add Groups"

@@ -17,21 +17,16 @@ tex_helper=fifa_func.texture_helper()
 	
 
 #Create Mesh and Object Function
-def createmesh(verts,faces,uvs,name,count,id,subname,colors,normal_flag,normals):
+def createmesh(verts,faces,uvs,name,count,id,subname,colors,normal_flag,normals,loc):
 	scn=bpy.context.scene
 	mesh=bpy.data.meshes.new("mesh"+str(count))
 	mesh.from_pydata(verts,[],faces)
-	
-	
-	
 	
 	for i in range(len(uvs)):
 		uvtex=mesh.uv_textures.new(name='map'+str(i))
 	for i in range(len(colors)):
 		coltex=mesh.vertex_colors.new(name='col'+str(i))
 	
-		
-		
 	bm=bmesh.new()
 	bm.from_mesh(mesh)
 	
@@ -74,7 +69,7 @@ def createmesh(verts,faces,uvs,name,count,id,subname,colors,normal_flag,normals)
 	else:
 		object=bpy.data.objects.new(name+'_'+str(id)+'_'+str(count),mesh)
 	
-	object.location=(0,0,0)
+	object.location=loc
 	
 	#Transformation attributes inherited from bounding boxes
 	#if not name=='stadium': 
@@ -129,14 +124,15 @@ class fifa_rx3:
 		self.materials=[]
 		self.material_count=0
 		self.material_list=[]
-		self.materials_dict={}
+		self.material_dict={}
 		self.object_list=[]
 		self.mat_assign_table=[]
 		self.id=0 #file id
 		self.crowd=[]
 		self.collisions=[]
 		self.collision_list=[]
-		self.init_read(self.path,mode)
+		code=self.init_read(self.path,mode)
+		print(code)
 		self.name=''
 
 	def init_read(self,path,mode):
@@ -150,10 +146,12 @@ class fifa_rx3:
 		print('FILE PATH: ',self.path)
 		print('FILE TYPE: ',self.type)
 		print('FILE ID:',self.id)
+		print('FILE MODE:',mode)
 		
 		try:
 			if mode:
 				self.data=open(self.path,'wb')
+				return 'new'
 			else:
 				self.data=open(self.path,'r+b')
 			if str(self.data.read(8))[2:-1]=='chunkzip':
@@ -257,7 +255,7 @@ class fifa_rx3:
 		data=object.data
 		bm=bmesh.new()
 		bm.from_mesh(data)
-		uvs_0=[];uvs_1=[];uvs_2=[]
+		uvs_0=[];uvs_1=[];uvs_2=[];uvs_3=[];uvs_4=[];uvs_5=[];uvs_6=[];uvs_7=[]
 		col_0=[];col_1=[];col_2=[]
 		
 		uvcount=len(bm.loops.layers.uv)
@@ -301,15 +299,17 @@ class fifa_rx3:
 			for o in opts:
 				if o[0]=='p': #verts
 					if o[3:]=='4f16':
-						helper.write_half_verts(f,verts[i])
+						helper.write_half_verts(self.data,verts[i])
 					else:
 						self.data.write(struct.pack('<3f',round(verts[i][0],8),round(verts[i][1],8),round(verts[i][2],8)))
 				elif o[0]=='n': #col0
 					col=(int(cols[0][i][0])<<20) + (int(cols[0][i][1])<<10) + (int(cols[0][i][2]))
 					self.data.write(struct.pack('<I',col))
+					#self.data.read(4)
 				elif o[0]=='g': #col1
 					col=(int(cols[1][i][0])<<20) + (int(cols[1][i][1])<<10) + (int(cols[1][i][2]))
 					self.data.write(struct.pack('<I',col))
+					#self.data.read(4)
 				elif o[0]=='b': #col2
 					col=(int(cols[2][i][0])<<20) + (int(cols[2][i][1])<<10) + (int(cols[2][i][2]))
 					self.data.write(struct.pack('<I',col))	
@@ -874,33 +874,33 @@ class fifa_rx3:
 				#header
 				data=self.data.write(struct.pack('<4I',self.offset_list[i][2],1,0,0))	
 				#data
-				if id>=len(group_list):
+				if id>=len(self.group_list):
 					s = bytes('CollisionGeometry', 'utf-8')
 					data+=self.data.write(s)
 					data+=self.data.write(b'\x00')
 					data+=self.data.write(struct.pack('B',id)) 
 				else:
-					s = bytes(group_list[id][0][5:], 'utf-8')
+					s = bytes(self.group_list[id][0][5:], 'utf-8')
 					self.data.write(s)	
 					self.data.write(b'\x00')
 					self.data.write(struct.pack('B',id)) 
 			elif self.offset_list[i][0]==123459928:
 				id=self.offset_list[i][3]
 				#material header
-				self.data.write(struct.pack('<4I',self.offset_list[i][2],len(materials_dict[materials_list[id]][3]),0,0))
+				self.data.write(struct.pack('<4I',self.offset_list[i][2],len(self.material_dict[self.material_list[id]][3]),0,0))
 				#data
 				#material_name
-				#print(materials_dict[materials_list[id]][1])
-				s=bytes(materials_dict[materials_list[id]][1],'utf-8')
+				#print(material_dict[material_list[id]][1])
+				s=bytes(self.material_dict[self.material_list[id]][1],'utf-8')
 				self.data.write(s)
 				self.data.write(b'\x00')
 				#textures
-				for j in range(len(materials_dict[materials_list[id]][2])):
-					s=bytes(materials_dict[materials_list[id]][3][j],'utf-8')
+				for j in range(len(self.material_dict[self.material_list[id]][2])):
+					s=bytes(self.material_dict[self.material_list[id]][3][j],'utf-8')
 					self.data.write(s)
 					self.data.write(b'\x00')
-					#print(self.texture_list.index(materials_dict[materials_list[id]][2][j]))
-					self.data.write(struct.pack('I',self.texture_list.index(materials_dict[materials_list[id]][2][j])))
+					#print(self.texture_list.index(material_dict[material_list[id]][2][j]))
+					self.data.write(struct.pack('I',self.texture_list.index(self.material_dict[self.material_list[id]][2][j])))
 			elif self.offset_list[i][0]==2116321516: #RENDERLINES
 				id=self.offset_list[i][3]
 				#renderline header
@@ -910,24 +910,24 @@ class fifa_rx3:
 				self.data.write(struct.pack('<4f',0,1,0,0))
 				self.data.write(struct.pack('<4f',0,0,1,0))
 				self.data.write(struct.pack('<4f',0,0,0,1))
-				self.data.write(struct.pack('<4f',group_list[id][1][0],group_list[id][1][1],group_list[id][1][2],1))
-				self.data.write(struct.pack('<4f',group_list[id][2][0],group_list[id][2][1],group_list[id][2][2],1))
-				self.data.write(struct.pack('<2I',group_list[id][3],4294967295))
-				object_offset=group_list[id][4]
-				for j in range(group_list[id][3]):
+				self.data.write(struct.pack('<4f',self.group_list[id][1][0],self.group_list[id][1][1],self.group_list[id][1][2],1))
+				self.data.write(struct.pack('<4f',self.group_list[id][2][0],self.group_list[id][2][1],self.group_list[id][2][2],1))
+				self.data.write(struct.pack('<2I',self.group_list[id][3],4294967295))
+				object_offset=self.group_list[id][4]
+				for j in range(self.group_list[id][3]):
 					self.data.write(struct.pack('<4f',self.object_list[object_offset+j][5][0][0],self.object_list[object_offset+j][5][0][1],self.object_list[object_offset+j][5][0][2],1))
 					self.data.write(struct.pack('<4f',self.object_list[object_offset+j][5][1][0],self.object_list[object_offset+j][5][1][1],self.object_list[object_offset+j][5][1][2],1))
 					self.data.write(struct.pack('<2I',object_offset+j,self.object_list[object_offset+j][13]))
 			elif self.offset_list[i][0]==4034198449: #COLLISIONS
 				id=self.offset_list[i][3]
 				self.data.write(struct.pack('4I',self.offset_list[i][2],1,0,0))
-				s=bytes(collision_list[id][2],'utf-8')
+				s=bytes(self.collision_list[id][2],'utf-8')
 				self.data.write(s)
 				self.data.write(b'\x00')
 				self.data.write(struct.pack('I',1))
-				self.data.write(struct.pack('I',collision_list[id][0]))
-				for i in range(len(collision_list[id][1])):
-					self.data.write(struct.pack('<3f',collision_list[id][1][i][0],collision_list[id][1][i][1],collision_list[id][1][i][2]))
+				self.data.write(struct.pack('I',self.collision_list[id][0]))
+				for i in range(len(self.collision_list[id][1])):
+					self.data.write(struct.pack('<3f',self.collision_list[id][1][i][0],self.collision_list[id][1][i][1],self.collision_list[id][1][i][2]))
 				
 			elif self.offset_list[i][0]==1808827868:
 				self.data.write(struct.pack('<4I',texture_count,0,0,0))
@@ -1069,7 +1069,7 @@ class fifa_rx3:
 				elif self.offset_list[i][0]==123459928:
 					#Local Variables
 					id=self.offset_list[i][3]
-					self.offset_list[i][2]=materials_dict[self.material_list[id]][4]
+					self.offset_list[i][2]=self.material_dict[self.material_list[id]][4]
 				elif self.offset_list[i][0]==230948820:
 					#Local Variables
 					id=self.offset_list[i][3]
@@ -1097,14 +1097,18 @@ class fifa_rx3:
 				
 #GENERAL FIFA FUNCTIONS
 		
-def write_textures_to_file(textures_list,type):
+def write_textures_to_file(textures_list,type,id):
 	scn=bpy.context.scene
-	if scn.stadium_export_flag:
-		f_name='stadium_'+str(scn.file_id)+'_'+scn.stadium_version+'_textures.rx3'
-	elif scn.trophy_export_flag:
-		f_name='trophy-ball_'+str(scn.file_id)+'_textures.rx3'
-	elif scn.gen_overwriter_flag or scn.face_edit_flag:
-		f_name=type+'_'+str(scn.file_id)+'_textures.rx3'
+	if type=='face':
+		f_name='face_'+str(id)+'_0_0_0_0_0_0_0_0_textures.rx3'
+	elif type=='eyes':
+		f_name='eyes_'+str(id)+'_0_textures.rx3'
+	elif type=='hair':
+		f_name='hair_'+str(id)+'_0_textures.rx3'
+	elif type=='stadium':
+		f_name='stadium_'+str(id)+'_'+scn.stadium_version+'_textures.rx3'
+	else:
+		f_name=type+'_'+str(id)+'_textures.rx3'
 	
 	f=fifa_rx3(scn.export_path+f_name,1) #open file
 	
