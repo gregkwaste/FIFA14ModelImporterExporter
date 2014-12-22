@@ -1,18 +1,34 @@
 import bpy,imp,os,struct,bmesh,zlib
-#fifa_func_path='fifa_tools\\scripts\\fifa_functions.py'
-#fifa_func=imp.load_source('fifa_func',fifa_func_path)
-fifa_func=imp.load_compiled('fifa_func','fifa_tools\\scripts\\fifa_functions.pyc')
+from io import BytesIO
+
+
+linux_path='/media/2tb/Blender/blender-2.71-windows64'
+
+#Detect different operating system
+if os.name=='nt': #windows detected
+	prePath='' 
+else:
+	prePath=linux_path+os.sep
+
+fifa_func_path='fifa_tools'+os.sep+'scripts'+os.sep+'fifa_functions.py'
+fifa_func=imp.load_source('fifa_func',prePath+fifa_func_path)
+#fifa_func=imp.load_compiled('fifa_func','fifa_tools\\scripts\\fifa_functions.pyc')
 from mathutils import Vector,Euler,Matrix
-from math import radians
+from math import radians,sqrt
 from subprocess import call
-halfpath='fifa_tools\\scripts\\half.py'
+
+#halfpath='fifa_tools'+os.sep+'scripts'+os.sep+'half.py'
 #half=imp.load_source('half',halfpath)
-half=imp.load_compiled('half','fifa_tools\\scripts\\half.pyc')
-comp=half.Float16Compressor()
+#half=imp.load_compiled('half','fifa_tools\\scripts\\half.pyc')
+
 sig='FIFA 3D Importer/Exporter, made by arti. v0.65. All rights reserved.©'
-#General Helper Function Class
-helper=fifa_func.general_helper()
-tex_helper=fifa_func.texture_helper()
+#General gh Function Class
+from fifa_func import general_helper as gh
+from fifa_func import texture_helper as tex_gh
+from fifa_func import half
+comp=half.Float16Compressor()
+#gh=fifa_func.general_gh()
+
 
 	
 
@@ -131,9 +147,10 @@ class fifa_rx3:
 		self.crowd=[]
 		self.collisions=[]
 		self.collision_list=[]
-		code=self.init_read(self.path,mode)
-		print(code)
 		self.name=''
+		self.code=self.init_read(self.path,mode)
+		print(self.code)
+		
 
 	def init_read(self,path,mode):
 		scn=bpy.context.scene
@@ -155,8 +172,8 @@ class fifa_rx3:
 			else:
 				self.data=open(self.path,'r+b')
 			if str(self.data.read(8))[2:-1]=='chunkzip':
-				
-				t=open('fifa_tools\\'+self.path.split(sep='\\')[-1]+'.decompressed','wb')
+				t=BytesIO()
+				#t=open('fifa_tools\\'+self.path.split(sep='\\')[-1]+'.decompressed','wb')
 				self.data.read(12)
 				sec_num=struct.unpack('>I',self.data.read(4))[0]
 				self.data.read(8)
@@ -184,15 +201,15 @@ class fifa_rx3:
 					except zlib.error:
 						return 'corrupt_file'
 					
-				t.close()
-				self.data=open(t.name,'r+b')
+				#self.data=open(t.name,'r+b')
+				self.data = t
 			
 			self.data.seek(8)
 			original_size=struct.unpack('<I',self.data.read(4))[0]
 			f_size=len(self.data.read())+12
 			
 			#Clopy Checking
-			if not original_size==f_size and path.split(sep='.')[-1]=='rx3' and path.split(sep='\\')[-1].split(sep='_')[0]=='stadium' and scn.game_enum in ['0','1']:
+			if not original_size==f_size and path.split(sep='.')[-1]=='rx3' and path.split(sep='\\')[-1].split(sep='_')[0]=='stadium' and scn.game_enum in ['0','2']:
 				e=open('fifa_tools\\scripts\\msg','r')
 				print(e.read())
 				print('                           I SEE WHAT YOU DID THERE')
@@ -294,16 +311,22 @@ class fifa_rx3:
 		bm.free()
 		return verts,uvs,cols,indices	
 
-	def convert_mesh_to_bytes(self,opts,count,verts,uvs,cols):
+	def convert_mesh_to_bytes(self,opts,count,verts,uvs,cols,normals):
 		for i in range(count):
 			for o in opts:
 				if o[0]=='p': #verts
 					if o[3:]=='4f16':
-						helper.write_half_verts(self.data,verts[i])
+						gh.write_half_verts(self.data,verts[i])
 					else:
 						self.data.write(struct.pack('<3f',round(verts[i][0],8),round(verts[i][1],8),round(verts[i][2],8)))
 				elif o[0]=='n': #col0
+					#print(normals[i],cols[0][i])
 					col=(int(cols[0][i][0])<<20) + (int(cols[0][i][1])<<10) + (int(cols[0][i][2]))
+					#veclen = sqrt(sum(normals[i][j]**2 for j in range(3)))
+					#for j in range(3): print(0.5 + 0.5*(normals[i][j]/veclen)),
+					#print('---') 
+					#col=int(0.5 + 0.5*(normals[i][0]/veclen))*1023<<20 + int(0.5 + 0.5*(normals[i][1]/veclen))*1023<<10 + int(0.5 + 0.5*(normals[i][j]/veclen))*1023	
+					#print(hex(color),col)
 					self.data.write(struct.pack('<I',col))
 					#self.data.read(4)
 				elif o[0]=='g': #col1
@@ -357,9 +380,9 @@ class fifa_rx3:
 				self.material_count+=1
 			elif offset[0]==5798132: #INDICES
 				if scn.trophy_flag==True:
-					temp=helper.facereadstrip(self.data,offset[1],self.endian)
+					temp=gh.facereadstrip(self.data,offset[1],self.endian)
 				else:
-					temp=helper.facereadlist(self.data,offset[1],self.endian)
+					temp=gh.facereadlist(self.data,offset[1],self.endian)
 				self.itable.append(temp[0])
 				self.indices_offsets.append((offset[1],temp[1]))
 			elif offset[0]==3751472158: #BONES
@@ -489,24 +512,24 @@ class fifa_rx3:
 			for j in opts:
 				if j[0][0]=='p':
 					if j[4]=='3f32':
-						verts.append(helper.read_vertices_1(f))   #READ VERTICES
+						verts.append(gh.read_vertices_1(f))   #READ VERTICES
 					elif j[4]=='4f16':
-						verts.append(helper.read_vertices_0(f))
+						verts.append(gh.read_vertices_0(f))
 				elif j[0][0]=='t':
 					if j[4]=='2f32':
-						eval('uvs_'+str(j[0][1])+'.append(helper.read_uvs_1(f))')
+						eval('uvs_'+str(j[0][1])+'.append(gh.read_uvs_1(f))')
 					elif j[4]=='2f16':
-						eval('uvs_'+str(j[0][1])+'.append(helper.read_uvs_0(f))')
+						eval('uvs_'+str(j[0][1])+'.append(gh.read_uvs_0(f))')
 					uvcount+=1
 				elif j[0][0]=='n':
 					colcount+=1
-					cols_0.append(helper.read_cols(f))
+					cols_0.append(gh.read_cols(f))
 				elif j[0][0]=='b':
 					colcount+=1
-					cols_2.append(helper.read_cols(f))
+					cols_2.append(gh.read_cols(f))
 				elif j[0][0]=='g':
 					colcount+=1
-					cols_1.append(helper.read_cols(f))
+					cols_1.append(gh.read_cols(f))
 				elif j[0][0]=='i':
 					if j[4]=='4u8':
 						eval('bones_i'+str(j[0][1])+'.append(struct.unpack(\'<4B\',f.read(4)))')
@@ -630,7 +653,7 @@ class fifa_rx3:
 			
 			
 			#Vector.rotate(pos,rot)
-			axis, roll = helper.mat3_to_vec_roll(mat.to_3x3())
+			axis, roll = gh.mat3_to_vec_roll(mat.to_3x3())
 			#pos = rot*pos
 			if k in [2,3,4,324,333]:
 				#print('Matrix ID= ',k)
@@ -657,19 +680,19 @@ class fifa_rx3:
 		self.data.read(4)
 		
 		if identifier==0:
-			data=tex_helper.read_dds_header(0)
+			data=tex_gh.read_dds_header(0)
 			#data[87]=49
 			string='DXT1'
 		elif identifier==1:
-			data=tex_helper.read_dds_header(0)
+			data=tex_gh.read_dds_header(0)
 			data[87]=51
 			string='DXT3'
 		elif identifier==2:
-			data=tex_helper.read_dds_header(144)
+			data=tex_gh.read_dds_header(144)
 			#data[87]=53
 			string='DXT5'
 		elif identifier==7:
-			data=tex_helper.read_dds_header(288)
+			data=tex_gh.read_dds_header(288)
 			#data[86]=49
 			#data[87]=48
 			string='NVTT'
@@ -710,11 +733,11 @@ class fifa_rx3:
 		tex_num=struct.unpack(self.endian+'i',self.data.read(4))[0]
 		self.data.read(8)
 		entry=[]
-		mat_name=helper.read_string(self.data)+'_'+str(count)
+		mat_name=gh.read_string(self.data)+'_'+str(count)
 		
 		#print(len(self.tex_names))
 		for i in range(tex_num):
-			texture_type=helper.read_string(self.data)
+			texture_type=gh.read_string(self.data)
 			#slot=new_mat.texture_slots.add()
 			tex_id=struct.unpack('<i',self.data.read(4))[0]
 			texture_name=texture_type+'_'+str(tex_id)
@@ -747,7 +770,7 @@ class fifa_rx3:
 		group_items=struct.unpack(self.endian+'i',self.data.read(4))[0]
 		self.data.read(4)
 		if scn.geometry_flag:
-			helper.create_boundingbox(vec1,vec2,name)
+			gh.create_boundingbox(vec1,vec2,name)
 		
 		for i in range(group_items):
 			ivec1=Vector((struct.unpack(self.endian+'f',self.data.read(4))[0],struct.unpack(self.endian+'f',self.data.read(4))[0],struct.unpack(self.endian+'f',self.data.read(4))[0]))
@@ -762,14 +785,14 @@ class fifa_rx3:
 	def read_group_names(self,offset):
 		self.data.seek(offset)
 		self.data.read(16)
-		group_name=helper.read_string(self.data)
+		group_name=gh.read_string(self.data)
 		#print(group_name)
 		self.group_names.append(group_name) 
 
 	def read_collision(self,offset):
 		self.data.seek(offset)
 		self.data.read(16)
-		name=helper.read_string(self.data)
+		name=gh.read_string(self.data)
 		self.data.read(4)
 		triscount=struct.unpack('<I',self.data.read(4))[0]
 		indices=[]
@@ -804,15 +827,15 @@ class fifa_rx3:
 			if self.offset_list[i][0]==582139446:
 				self.data.write(struct.pack('<4I',object_count,0,0,0))
 				for j in range(object_count):
-					if self.object_list[j][1]>65535:
+					if self.object_list[j].vertsCount>65535:
 						ind_size=4
 					else:
 						ind_size=2
-					self.data.write(struct.pack('<4I',helper.size_round(self.object_list[j][2]*ind_size+16),self.object_list[j][2],ind_size,0))
+					self.data.write(struct.pack('<4I',gh.size_round(self.object_list[j].indicesCount*ind_size+16),self.object_list[j].indicesCount,ind_size,0))
 			elif self.offset_list[i][0]==3263271920: #mesh description
 				id=self.offset_list[i][3]
-				self.data.write(struct.pack('<4I',self.offset_list[i][2],len(self.object_list[id][6])+1,0,0))
-				s = bytes(self.object_list[id][6], 'utf-8')
+				self.data.write(struct.pack('<4I',self.offset_list[i][2],len(self.object_list[id].meshDescr)+1,0,0))
+				s = bytes(self.object_list[id].meshDescr, 'utf-8')
 				self.data.write(s) 
 			elif self.offset_list[i][0]==685399266: # PROP POSITIONS
 				id=self.offset_list[i][3]
@@ -828,8 +851,8 @@ class fifa_rx3:
 					self.data.write(s)
 					self.data.write(b'\x00')
 				for j in range(len(self.object_list)):
-					self.data.write(struct.pack('<2I',3566041216,len(self.object_list[j][0])+1))
-					s = bytes(self.object_list[j][0], 'utf-8')
+					self.data.write(struct.pack('<2I',3566041216,len(self.object_list[j].name)+1))
+					s = bytes(self.object_list[j].name, 'utf-8')
 					self.data.write(s)
 					self.data.write(b'\x00')
 				for j in range(len(self.texture_list)):
@@ -846,26 +869,23 @@ class fifa_rx3:
 					
 					self.data.write(s)
 					self.data.write(b'\x00')
-				
-				
-				
-				
+			
 			elif self.offset_list[i][0]==5798132: #INDICES
 				id=self.offset_list[i][3]
 				#header
-				if self.object_list[id][1]>65535:
+				if self.object_list[id].vertsCount>65535:
 					ind_size=4
 				else:
 					ind_size=2
-				self.data.write(struct.pack('<4I',helper.size_round(self.object_list[id][2]*ind_size+16),self.object_list[id][2],ind_size,0))  
+				self.data.write(struct.pack('<4I',gh.size_round(self.object_list[id].indicesCount*ind_size+16),self.object_list[id].indicesCount,ind_size,0))  
 				#data
-				self.write_indices(self.object_list[id][11])
+				self.write_indices(self.object_list[id].indices)
 			elif self.offset_list[i][0]==5798561: #VERTICES
 				id=self.offset_list[i][3]
 				#header
-				self.data.write(struct.pack('<4I',self.offset_list[i][2],self.object_list[id][1],self.object_list[id][8],1))
+				self.data.write(struct.pack('<4I',self.offset_list[i][2],self.object_list[id].vertsCount,self.object_list[id].chunkLength,1))
 				#data
-				self.convert_mesh_to_bytes(self.object_list[id][7],self.object_list[id][1],self.object_list[id][9],self.object_list[id][10],self.object_list[id][4])
+				self.convert_mesh_to_bytes(self.object_list[id].meshDescrShort,self.object_list[id].vertsCount,self.object_list[id].verts,self.object_list[id].uvs,self.object_list[id].colors,self.object_list[id].normals)
 			elif self.offset_list[i][0]==3566041216: #80......
 				self.data.write(struct.pack('<4I',4,0,0,0))
 			elif self.offset_list[i][0]==230948820: #GROUPS
@@ -915,9 +935,9 @@ class fifa_rx3:
 				self.data.write(struct.pack('<2I',self.group_list[id][3],4294967295))
 				object_offset=self.group_list[id][4]
 				for j in range(self.group_list[id][3]):
-					self.data.write(struct.pack('<4f',self.object_list[object_offset+j][5][0][0],self.object_list[object_offset+j][5][0][1],self.object_list[object_offset+j][5][0][2],1))
-					self.data.write(struct.pack('<4f',self.object_list[object_offset+j][5][1][0],self.object_list[object_offset+j][5][1][1],self.object_list[object_offset+j][5][1][2],1))
-					self.data.write(struct.pack('<2I',object_offset+j,self.object_list[object_offset+j][13]))
+					self.data.write(struct.pack('<4f',self.object_list[object_offset+j].boundBox[0][0],self.object_list[object_offset+j].boundBox[0][1],self.object_list[object_offset+j].boundBox[0][2],1))
+					self.data.write(struct.pack('<4f',self.object_list[object_offset+j].boundBox[1][0],self.object_list[object_offset+j].boundBox[1][1],self.object_list[object_offset+j].boundBox[1][2],1))
+					self.data.write(struct.pack('<2I',object_offset+j,self.object_list[object_offset+j].material))
 			elif self.offset_list[i][0]==4034198449: #COLLISIONS
 				id=self.offset_list[i][3]
 				self.data.write(struct.pack('4I',self.offset_list[i][2],1,0,0))
@@ -1038,32 +1058,32 @@ class fifa_rx3:
 					for j in range(len(self.prop_list)):
 						size+=len(self.prop_list[j][0])+1+8
 					for j in range(len(self.object_list)):
-						size+=len(self.object_list[j][0])+1+8
+						size+=len(self.object_list[j].name)+1+8
 					for j in range(len(self.texture_list)):
 						size+=len(self.texture_list[j])+1+8
-					self.offset_list[i][2]=helper.size_round(size)
+					self.offset_list[i][2]=gh.size_round(size)
 				elif self.offset_list[i][0]==3263271920:
 					#Local Variables
 					id=self.offset_list[i][3]
-					self.offset_list[i][2]=helper.size_round(len(self.object_list[id][6])+1+16)
+					self.offset_list[i][2]=gh.size_round(len(self.object_list[id].meshDescr)+1+16)
 				elif self.offset_list[i][0]==5798132:
 					#Local Variables
 					id=self.offset_list[i][3]
-					if self.object_list[id][1]>65535:
+					if self.object_list[id].vertsCount>65535:
 						ind_size=4
 					else:
 						ind_size=2
-					self.offset_list[i][2]=helper.size_round(self.object_list[id][2]*ind_size+16)
+					self.offset_list[i][2]=gh.size_round(self.object_list[id].indicesCount*ind_size+16)
 				elif self.offset_list[i][0]==5798561:
 					#Local Variables
 					id=self.offset_list[i][3]
-					self.offset_list[i][2]=helper.size_round(16+self.object_list[id][1]*self.object_list[id][8])
+					self.offset_list[i][2]=gh.size_round(16+self.object_list[id].vertsCount*self.object_list[id].chunkLength)
 				elif self.offset_list[i][0]==3566041216:
 					self.offset_list[i][2]=16
 				elif self.offset_list[i][0]==4034198449:
 					#Local Variables
 					id=self.offset_list[i][3]
-					self.offset_list[i][2]=helper.size_round(16+len(self.collision_list[id][2])+1+4+self.collision_list[id][0]*3*12)
+					self.offset_list[i][2]=gh.size_round(16+len(self.collision_list[id][2])+1+4+self.collision_list[id][0]*3*12)
 				elif self.offset_list[i][0]==685399266:
 					self.offset_list[i][2]=32
 				elif self.offset_list[i][0]==123459928:
@@ -1074,13 +1094,13 @@ class fifa_rx3:
 					#Local Variables
 					id=self.offset_list[i][3]
 					try:
-						self.offset_list[i][2]=helper.size_round(16+len(self.group_list[id][0][5:])+5)
+						self.offset_list[i][2]=gh.size_round(16+len(self.group_list[id][0][5:])+5)
 					except IndexError:
 						self.offset_list[i][2]=48	
 				elif self.offset_list[i][0]==2116321516:
 					#Local Variables
 					id=self.offset_list[i][3]
-					self.offset_list[i][2]=helper.size_round(16+4*16+32+8+self.group_list[id][3]*40)								
+					self.offset_list[i][2]=gh.size_round(16+4*16+32+8+self.group_list[id][3]*40)								
 									
 	def write_indices(self,indices):
 		#print('Indices Length: ',indices[0])
@@ -1142,7 +1162,7 @@ def read_converted_textures(offset_list,textures_list,path):
 		ext_len=len(textures_list[k][1].split(sep='\\')[-1].split(sep='.')[-1])
 		
 		t=open(path+textures_list[k][1].split(sep='\\')[-1][0:-ext_len-1]+'.dds','rb')
-		textures_list[k][3],textures_list[k][4],textures_list[k][5],textures_list[k][7]=tex_helper.read_dds_info(t) #store width,height,mipmaps,type
+		textures_list[k][3],textures_list[k][4],textures_list[k][5],textures_list[k][7]=tex_gh.read_dds_info(t) #store width,height,mipmaps,type
 		t.close()
 		print(textures_list[k][3],textures_list[k][4],textures_list[k][5],textures_list[k][7])
 		
@@ -1161,15 +1181,15 @@ def read_converted_textures(offset_list,textures_list,path):
 			w=w//2
 			h=h//2
 		
-		
-		textures_list[k][6]=helper.size_round(size+16) #store size after calculation
+
+		textures_list[k][6] = gh.size_round(size+16) #store size after calculation
 		offset_list.append((2047566042,offset_list[-1][1]+offset_list[-1][2],textures_list[k][6],k))
 	
 	size=16
 	for i in range(len(textures_list)):
 		size=size+len(textures_list[i][0])+9
 	
-	offset_list.append((1285267122,offset_list[-1][1]+offset_list[-1][2],helper.size_round(size)))
+	offset_list.append((1285267122,offset_list[-1][1]+offset_list[-1][2],gh.size_round(size)))
 	
 	return offset_list,textures_list
 		
@@ -1180,7 +1200,7 @@ def crowd_seat_align(align_vector):
 	
 	for f in bm.faces:
 		if f.select==True:
-			base=helper.face_center(f)
+			base=gh.face_center(f)
 			
 			if align_vector==Vector((0,0,0)): #calculate cursor vector
 				align_vector=ob.matrix_world.inverted()*(scn.cursor_location-(ob.matrix_world*base))
@@ -1278,6 +1298,7 @@ def crowd_groups(name):
 def convert_mesh_init(object,mode):
 	scn=bpy.context.scene
 	verts=[]
+	norms=[]
 	uvs=[]
 	cols=[]
 	indices=[]
@@ -1294,7 +1315,7 @@ def convert_mesh_init(object,mode):
 		mesh_descr_short=[]
 		
 		
-		boundbox=helper.object_bbox(object)
+		boundbox=gh.object_bbox(object)
 		
 		#Constructing mesh description
 		off=0
@@ -1308,10 +1329,10 @@ def convert_mesh_init(object,mode):
 		off+=12
 		
 		
-		if 'col0' in collist:
-			mesh_descr+='n0:'+'{:02X}'.format(off)+':00:0001:3s10n'+' '
-			mesh_descr_short.append('n0:3s10n')
-			off+=4
+		#if 'col0' in collist:
+		mesh_descr+='n0:'+'{:02X}'.format(off)+':00:0001:3s10n'+' '
+		mesh_descr_short.append('n0:3s10n')
+		off+=4
 			
 			
 		if 'col1' in collist:
@@ -1375,8 +1396,10 @@ def convert_mesh_init(object,mode):
 			
 			
 			for vert in range(len(f.vertices)):
-				co=scale_mat*rot_x_mat*object_matrix_wrld*data.vertices[f.vertices[vert]].co
+				co = scale_mat*rot_x_mat*object_matrix_wrld*data.vertices[f.vertices[vert]].co
+				norm = scale_mat*rot_x_mat*object_matrix_wrld*data.vertices[f.vertices[vert]].normal
 				verts.append((co[0],co[1],co[2]))
+				norms.append((norm[0],norm[1],norm[2]))
 				
 				for k in range(uvcount):
 					u=eval('data.tessface_uv_textures['+str(k)+'].data['+str(f.index)+'].uv'+str(vert+1)+'[0]')
@@ -1427,7 +1450,7 @@ def convert_mesh_init(object,mode):
 		for j in range(colcount):
 			eval('cols.append(col_'+str(j)+')')
 		
-		return len(verts),verts,len(uvs),uvs,len(indices)*3,indices,cols
+		return len(verts),verts,len(uvs),uvs,len(indices)*3,indices,cols,norms
 	
 def read_crowd_14(file): #NOT USED
 	print('READING CROWD FILE')

@@ -5,22 +5,25 @@ from math import radians
 from shutil import copyfile
 from xml.dom import minidom
 
+linux_path='/media/2tb/Blender/blender-2.71-windows64'
 
-fifa_main_path='fifa_tools\\scripts\\fifa_main.py'
-fifa_main=imp.load_source('fifa_main',fifa_main_path)
+#Detect different operating system
+if os.name=='nt': #windows detected
+	prePath='' 
+else:
+	prePath=linux_path+os.sep
+
+fifa_main_path='fifa_tools'+os.sep+'scripts'+os.sep+'fifa_main.py'
+fifa_main=imp.load_source('fifa_main',prePath+fifa_main_path)
 #fifa_main=imp.load_compiled('fifa_main','fifa_tools\\scripts\\fifa_main.pyc')
-#fifa_func_path='fifa_tools\\scripts\\fifa_functions.py'
-#fifa_func=imp.load_source('fifa_func',fifa_func_path)
-fifa_func=imp.load_compiled('fifa_func','fifa_tools\\scripts\\fifa_functions.pyc')
+fifa_func_path='fifa_tools'+os.sep+'scripts'+os.sep+'fifa_functions.py'
+fifa_func=imp.load_source('fifa_func',prePath+fifa_func_path)
+#fifa_func=imp.load_compiled('fifa_func','fifa_tools\\scripts\\fifa_functions.pyc')
 helper=fifa_func.general_helper()
 tex_helper=fifa_func.texture_helper()
 from fifa_main import sig
 
-
-
-
 #INIT VARIABLES
-
 f=0
 e=0
 ddsheader='10'
@@ -31,12 +34,16 @@ files=[]
 dir='fifa_tools\\'
 dir=os.path.realpath(dir)
 
-
-
-texture_name_dict={0:'diffuseTexture',
+texture_slotType_dict={0:'diffuseTexture',
 			1:'ambientTexture',
 			2:'coeffMap',
-			3:'normalMap'
+			3:'normalMap',
+			4:'cubicEnvMap',
+			5:'incandescenceMap',
+			6:'alphamask',
+			7:'noiseTexture',
+			8:'pitchLinesMap',
+			9:'diffuseTexture'			
 }
 
 light_props=[['sShader',['fGlareSensitivityCenter','fGlareSensitivityEdge','fGlareSensitivityPower','fGlareSizeMultSpread','fGlareBloomScale','fGlareBloomSpread','fGlareBloomRate','fGlareRotationRate','fFlareMovementRate','fFlareOffsetScale','fFlareEndScale'],['fVbeamAngle','fVbeamAngleSpread','fVbeamLength','fVbeamLengthSpread']],
@@ -79,7 +86,7 @@ group_names=['Pitch',
 'EnvironmentSkirt',
 'Banner_NoShadowCast',
 'Jumbotron',
-'SideLineProps',
+'SidelineProps',
 'TournamentDressing_NoShadowCast',
 'StadiumWear_NoShadowCast',
 'Sky',
@@ -96,6 +103,12 @@ group_names_15=group_names+[
 'Roof_NoShadowCast',
 'Roof_ShadowAlpha',
 ]
+
+standard_materials = ['adboard', 'adboarddigital', 'adboarddigitalglow', 'adboarddigitalwide', 'adboardgeneric', 'adboardscrolling', 'adboardsingledigital', 'adboardsingledigitalglow', 'banneraway',
+ 'bannergroup', 'bannerhome', 'concrete', 'concreteshadow', 'crest', 'diffusealpha', 'diffuseopaque', 'diffusesimple', 'diffusewet', 'envmetal', 'genericad', 'glass',
+ 'homeprimary', 'homesecondary', 'initialshadinggroup', 'jumbotron', 'metalbare', 'metalpainted', 'pitch', 'pitchnoline', 'rubbershadow', 'sclockhalves', 'sclockminutesones',
+ 'sclockminutestens', 'sclockscoreawayones', 'sclockscoreawaytens', 'sclockscorehomeones', 'sclockscorehometens', 'sclocksecondsones', 'sclocksecondstens', 'sclocktimeanalog',
+  'simpleglow', 'sky', 'snowplie', 'tournament']
 
 ##OPERATORS
 class align_crowd_faces(bpy.types.Operator) :
@@ -157,8 +170,6 @@ class assign_crowd_type(bpy.types.Operator) :
 		fifa_main.crowd_groups(scn.crowd_type_enum)
 		
 		return{'FINISHED'}
-				
-
 
 class colour_assign(bpy.types.Operator) :
 	bl_idname = "mesh.color_assign"
@@ -426,14 +437,14 @@ class file_import(bpy.types.Operator) :
 				return {'CANCELLED'}
 			
 			f=fifa_main.fifa_rx3(path,0)
-			if f=='io_error':
+			if f.code=='io_error':
 				self.report({'ERROR'},'File Error')
 				return {'CANCELLED'}
-			elif f=='corrupt_file':
-				self.report({'ERROR'},'Corrupt File')
-				return {'CANCELLED'}	
-			elif f=='file_clopy':
+			elif f.code=='file_clopy':
 				self.report({'ERROR'},'Illegal File')
+				return {'CANCELLED'}
+			elif f.code=='corrupt_file':
+				self.report({'ERROR'},'Corrupt File')
 				return {'CANCELLED'}
 				
 			print(f)
@@ -503,15 +514,16 @@ class file_import(bpy.types.Operator) :
 			
 			#INIT FILE
 			f=fifa_main.fifa_rx3(path,0)
-			if f=='io_error':
+			if f.code=='io_error':
 				self.report({'ERROR'},'File Error')
 				return {'CANCELLED'}
-			elif f=='file_clopy':
+			elif f.code=='file_clopy':
 				self.report({'ERROR'},'Illegal File')
 				return {'CANCELLED'}
-			elif f=='corrupt_file':
+			elif f.code=='corrupt_file':
 				self.report({'ERROR'},'Corrupt File')
 				return {'CANCELLED'}
+			
 			
 			if path.split(sep='_')[-1].split(sep='.')[0]=='textures':
 				f.type='texture'
@@ -860,10 +872,11 @@ class file_import(bpy.types.Operator) :
 				self.report({'ERROR'},'File Error')
 				return {'CANCELLED'}
 			
+			
 			f.type='lights'
 			print('FILE TYPE DETECTED: ',f.type)
 			
-			xmldata=minidom.parse(f.path)
+			xmldata=minidom.parse(f.data)
 			f.data.close()
 			
 			#PARTICLE SYSTEM NODE
@@ -1064,8 +1077,28 @@ class texture_export(bpy.types.Operator):
 					self.report({'INFO'},'Textures exported Successfully')
 		return {'FINISHED'}
 
+class fifa_3d_model():
+	def __init__(self):
+		self.diffuseId=0
+		self.name=''
 		
-
+		self.colorList=[]
+		self.boundBox= ()
+		self.meshDescr=''
+		self.meshDescrShort=''
+		self.chunkLength=0
+		
+		self.vertsCount=0
+		self.verts=[]
+		self.uvLayerCount=0
+		self.uvs=[]
+		self.indicesCount=0
+		self.indices=[]
+		self.colors=[]
+		self.normals=[]
+		
+		self.material=0
+		
 ###EXPORTER OPERATOR###		
 class test_file_export(bpy.types.Operator) :
 	bl_idname = "mesh.test_fifa_export"
@@ -1092,7 +1125,7 @@ class test_file_export(bpy.types.Operator) :
 			#stadium props handling
 			if scn.stadium_export_flag and item.type=='EMPTY' and item.name=='PROPS':
 				rot_x_mat=Matrix.Rotation(radians(-90),4,'X')
-				scale_mat=Matrix.Scale(1000,4)
+				scale_mat=Matrix.Scale(10000,4)
 				for child_item in item.children:
 					co=rot_x_mat*scale_mat*child_item.location
 					rot=(child_item.rotation_euler[0],child_item.rotation_euler[2],child_item.rotation_euler[1])
@@ -1123,26 +1156,31 @@ class test_file_export(bpy.types.Operator) :
 				print('Group Found: '+str(item.name))
 				for child_item in item.children:
 					#Initialize Entry for object information storage
-					entry=[]
-					entry_diffuse=0
-					entry_ambient=0
+					entry=fifa_3d_model()
+					
+					entry.diffuseId=0
 					#Store Name
-					entry.append(child_item.name) #0
+					#entry.append(child_item.name) #0
+					entry.name=child_item.name
 					#Get Object Data
-					entry_collist,entry_boundbox,entry_mesh_descr,entry_mesh_descr_short,entry_chunk_length=fifa_main.convert_mesh_init(child_item,0)
-					entry_vert_length,entry_verts_table,entry_uvlen,entry_uvs_table,entry_ind_length,entry_indices_table,entry_cols=fifa_main.convert_mesh_init(child_item,1)
+					#entry_collist,entry_boundbox,entry_mesh_descr,entry_mesh_descr_short,entry_chunk_length=fifa_main.convert_mesh_init(child_item,0)
+					entry.colorList,entry.boundBox,entry.meshDescr,entry.meshDescrShort,entry.chunkLength=fifa_main.convert_mesh_init(child_item,0)
+					
+					#entry_vert_length,entry_verts_table,entry_uvlen,entry_uvs_table,entry_ind_length,entry_indices_table,entry_cols,entry_norms=fifa_main.convert_mesh_init(child_item,1)
+					entry.vertsCount,entry.verts,entry.uvLayerCount,entry.uvs,entry.indicesCount,entry.indices,entry.colors,entry.normals=fifa_main.convert_mesh_init(child_item,1)
+					
 					#Append Data to Entry
-					entry.append(entry_vert_length) #1
-					entry.append(entry_ind_length) #2
-					entry.append(entry_uvlen) #3
-					entry.append(entry_cols) #4
-					entry.append(entry_boundbox) #5
-					entry.append(entry_mesh_descr) #6
-					entry.append(entry_mesh_descr_short) #7
-					entry.append(entry_chunk_length) #8
-					entry.append(entry_verts_table) #9
-					entry.append(entry_uvs_table) #10
-					entry.append(entry_indices_table) #11
+					#entry.append(entry_vert_length) #1
+					#entry.append(entry_ind_length) #2
+					#entry.append(entry_uvlen) #3
+					#entry.append(entry_cols) #4
+					#entry.append(entry_boundbox) #5
+					#entry.append(entry_mesh_descr) #6
+					#entry.append(entry_mesh_descr_short) #7
+					#entry.append(entry_chunk_length) #8
+					#entry.append(entry_verts_table) #9
+					#entry.append(entry_uvs_table) #10
+					#entry.append(entry_indices_table) #11
 					
 				
 					if scn.stadium_export_flag:	
@@ -1150,53 +1188,12 @@ class test_file_export(bpy.types.Operator) :
 						try:
 							mat_name=child_item.material_slots[0].name
 							if not mat_name in f.material_dict:
-							
-							
-								#Covert material name
-								#Exceptions
-								if mat_name=='pitch':
-									local_mat_name='pitch'
-								elif mat_name=='pitchnoline':
-									local_mat_name='pitchnoline'
-								elif mat_name=='goalpost':
-									local_mat_name='goalpost'
-								elif mat_name=='sky':
-									local_mat_name='sky'
-								elif mat_name=='jumbotron':
-									local_mat_name='jumbotron'
-								elif mat_name=='adboard':
-									local_mat_name='adboard'
-								elif mat_name=='crest':
-									local_mat_name='crest'
-								elif mat_name=='adboarddigital':
-									local_mat_name='adboarddigital'
-								elif mat_name=='adboarddigitalglow':
-									local_mat_name='adboarddigitalglow'
-								elif mat_name=='adboardscrolling':
-									local_mat_name='adboardscrolling'
-								elif mat_name=='banneraway':
-									local_mat_name='banneraway'
-								elif mat_name=='bannerhome':
-									local_mat_name='bannerhome'
-								elif mat_name=='sclockhalves':
-									local_mat_name='sclockhalves'
-								elif mat_name=='sclockminutesones':
-									local_mat_name='sclockminutesones'
-								elif mat_name=='sclockminutestens':
-									local_mat_name='sclockminutestens'
-								elif mat_name=='sclocksecondones':
-									local_mat_name='sclocksecondones'
-								elif mat_name=='sclocksecondtens':
-									local_mat_name='sclocksecondtens'
-								elif mat_name=='sclockscoreawayones':
-									local_mat_name='sclockscoreawayones'
-								elif mat_name=='sclockscoreawaytens':
-									local_mat_name='sclockscoreawaytens'
-								elif mat_name=='sclockscorehomeones':
-									local_mat_name='sclockscorehomeones'
-								elif mat_name=='sclockscorehometens':
-									local_mat_name='sclockscorehometens'
 								
+								#Convert material name
+								#Exceptions
+								materialType=mat_name.split(sep='_')[0]
+								if materialType in standard_materials:
+									local_mat_name = materialType
 								#check alpha or opaque
 								else:
 									if bpy.data.materials[mat_name].use_transparency:
@@ -1205,38 +1202,34 @@ class test_file_export(bpy.types.Operator) :
 										local_mat_name='diffuseopaque'
 								
 								local_texture_list=[]
-								text_len=0
-								#Store 3 first textures
-								for i in range(3):
+								local_texture_name_list=[]
+								textureCount=0
+								#Store 3 first textures Texture Slot Names
+								#Matchup Textures with the FIFA Slot Type dictionary.
+								for i in range(10): # 9 slots for textures
 									try:
 										local_texture_list.append(bpy.data.materials[mat_name].texture_slots[i].name)
-										text_len+=1
+										local_texture_name_list.append(texture_slotType_dict[i])
+										textureCount+=1
 									except:
 										print('Empty Texture Slot')
 									
-								#Matchup Textures with the texture name dictionary.
-								local_texture_name_list=[]
-								for i in range(text_len):
-									try:
-										local_texture_name_list.append(texture_name_dict[i])
-									except:
-										print('Empty Texture Slot')
-										
 								print(local_texture_name_list)
 								#Calculate Material Section Size
 								size=16+len(local_mat_name)+1
 								for i in range(len(local_texture_name_list)):
 									size+=len(local_texture_name_list[i])
 									size+=5
-									
 								size=helper.size_round(size)
+								
 								#Material and texture Storage
 								f.material_dict[mat_name]=(mat_name,local_mat_name,local_texture_list,local_texture_name_list,size)
 								f.material_list.append(mat_name)
 								
-								for i in range(len(local_texture_list)):
+								for i in range(textureCount):
 									if not local_texture_list[i] in f.texture_list:
 										f.texture_list.append(local_texture_list[i])
+								
 								#Get object diffuse and ambient texture ids
 								try:
 									entry_diffuse=f.texture_list.index(local_texture_list[0])
@@ -1258,12 +1251,13 @@ class test_file_export(bpy.types.Operator) :
 							print('No material in object' +str(child_item.name))
 						
 					#FINALISE ENTRY ADDITION
-					entry.append(entry_diffuse) #12
+					#entry.append(entry_diffuse) #12
+					entry.diffuseId=entry_diffuse
 					#entry.append(entry_ambient) ###
 					try:
-						entry.append(entry_material) #13
+						entry.material=entry_material #13
 					except:
-						entry.append(0)
+						pass
 					
 					f.object_list.append(entry)
 			
@@ -1478,7 +1472,7 @@ class group_add(bpy.types.Operator):
 
 	
 	def invoke(self, context,event):
-		for name in group_names:
+		for name in group_names_15:
 			if not 'stad_'+name in bpy.data.objects:
 				bpy.ops.object.empty_add(type='PLAIN_AXES',location=(0,0,0))
 				ob=bpy.data.objects['Empty']

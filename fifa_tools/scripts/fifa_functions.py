@@ -2,9 +2,18 @@ import struct,os,bpy,imp,bmesh,itertools,zlib,operator
 from mathutils import Vector,Euler,Matrix
 from math import radians,sqrt,degrees,acos,atan2
 from random import randint
-halfpath='fifa_tools\\scripts\\half.py'
+
+linux_path='/media/2tb/Blender/blender-2.71-windows64'
+
+#Detect different operating system
+if os.name=='nt': #windows detected
+	prePath='' 
+else:
+	prePath=linux_path+os.sep
+
+halfpath='fifa_tools'+os.sep+'scripts'+os.sep+'half.py'
 #half=imp.load_source('half',halfpath)
-half=imp.load_compiled('half','fifa_tools\\scripts\\half.pyc')
+half=imp.load_compiled('half',prePath+'fifa_tools'+os.sep+'scripts'+os.sep+'half.pyc')
 dir='fifa_tools'
 comp=half.Float16Compressor()
 
@@ -29,7 +38,8 @@ dict={(12,0):(2,0,0,1,0),  #(CHUNK_LENGTH, VFLAG):   (PREGAP,INNERGAP,POSTGAP,UV
 		  
 class texture_helper:
 	#READ DDS HEADER FILE
-	def read_dds_header(self,offset):
+	@staticmethod
+	def read_dds_header(offset):
 		data=[]
 		headers=open('fifa_tools\\dds_headers','rb')
 		headers.seek(offset+16)
@@ -40,7 +50,8 @@ class texture_helper:
 		headers.close() 
 		return data
 
-	def read_dds_info(self,data):
+	@staticmethod
+	def read_dds_info(data):
 		data.seek(12)
 		width=struct.unpack('<I',data.read(4))[0]
 		height=struct.unpack('<I',data.read(4))[0]
@@ -52,7 +63,8 @@ class texture_helper:
 		
 		return height,width,mipmaps,type
 		
-	def get_textures_list(self,object):
+	@staticmethod
+	def get_textures_list(object):
 		texture_dict={}
 		textures_list=[]
 		status=''
@@ -83,12 +95,12 @@ class texture_helper:
 class general_helper:
 
 	##READ VERTEX FUNCTIONS 
-
-	def read_vertices_1(self,f):
+	@staticmethod
+	def read_vertices_1(f):
 		vert_tup=struct.unpack('<3f',f.read(12))
 		return((vert_tup[0]/100,-vert_tup[2]/100,vert_tup[1]/100)) 
-
-	def read_vertices_0(self,f):
+	@staticmethod
+	def read_vertices_0(f):
 		vx=comp.decompress(struct.unpack('<H',f.read(2))[0])
 		vy=comp.decompress(struct.unpack('<H',f.read(2))[0])
 		vz=comp.decompress(struct.unpack('<H',f.read(2))[0])
@@ -98,19 +110,19 @@ class general_helper:
 		hy=struct.unpack('f',struct.pack('I',vy))[0]
 		hz=struct.unpack('f',struct.pack('I',vz))[0]
 		return((hx/100,-hz/100,hy/100))  
-
-	def read_uvs_1(self,f):
+	@staticmethod
+	def read_uvs_1(f):
 		return(struct.unpack('<2f',f.read(8)))
 
-
-	def read_uvs_0(self,f):
+	@staticmethod
+	def read_uvs_0(f):
 		uvx=comp.decompress(struct.unpack('<H',f.read(2))[0])
 		uvy=comp.decompress(struct.unpack('<H',f.read(2))[0])
 		huvx=struct.unpack('f',struct.pack('I',uvx))[0]
 		huvy=struct.unpack('f',struct.pack('I',uvy))[0]
 		return((huvx,huvy))
-
-	def read_cols(self,f):
+	@staticmethod
+	def read_cols(f):
 		val=struct.unpack('<I',f.read(4))[0]
 		val_0=(val &0x3ff)/1023
 		val_1=((val>>10) &0x3ff)/1023
@@ -119,7 +131,8 @@ class general_helper:
 
 
 		##READ AND STORE FACE DATA#
-	def facereadlist(self,f,offset,endian):
+	@staticmethod
+	def facereadlist(f,offset,endian):
 		faces=[]	
 		f.seek(offset)
 		f.read(4)
@@ -142,8 +155,8 @@ class general_helper:
 			
 		#print(faces)   
 		return faces,indiceslength
-
-	def facereadstrip(self,f,offset,endian):
+	@staticmethod
+	def facereadstrip(f,offset,endian):
 		faces=[]	
 		f.seek(offset)
 		f.read(4)
@@ -177,14 +190,16 @@ class general_helper:
 		#print(faces)   
 		return faces,indiceslength
 
-	def write_half_verts(self,f,co):
+	@staticmethod
+	def write_half_verts(f,co):
 		hvx=comp.compress(round(co[0],8))
 		hvy=comp.compress(round(co[1],8))
 		hvz=comp.compress(round(co[2],8))
 		f.write(struct.pack('<HHH',hvx,hvy,hvz))
 		f.seek(2,1)
 	
-	def read_string(self,f):
+	@staticmethod
+	def read_string(f):
 		c=''
 		for i in range(128):
 			s=struct.unpack('<B',f.read(1))[0]
@@ -194,14 +209,17 @@ class general_helper:
 
 		return {'FINISHED'}
 		
-	def rgb_to_hex(self,rgb):
+	@staticmethod
+	def rgb_to_hex(rgb):
 		return '#%02x%02x%02x' % rgb
 
-	def hex_to_rgb(self,hex):
+	@staticmethod
+	def hex_to_rgb(hex):
 		hex=hex.lstrip('#')
 		hlen=len(hex)
 		return tuple(int(hex[i:i+int(hlen/3)], 16)/255 for i in range(0, hlen, int(hlen/3)))
 
+	@staticmethod
 	def vector_to_matrix(v):
 		matrix=Matrix()
 		
@@ -209,15 +227,16 @@ class general_helper:
 			matrix[i][i]=v[i]
 		return matrix		
 	
-	def size_round(self,size):
+	@staticmethod
+	def size_round(size):
 		rest=size % 16
 		eucl=size // 16
 		if rest>0:
 			size=eucl*16+16
 		return size 
 
-
-	def face_center(self,f):
+	@staticmethod
+	def face_center(f):
 		cx=0
 		cy=0
 		cz=0
@@ -229,7 +248,8 @@ class general_helper:
 			
 		return Vector((cx/len(f.verts),cy/len(f.verts),cz/len(f.verts)))
 		
-	def vec_roll_to_mat3(self,vec,roll):
+	@staticmethod
+	def vec_roll_to_mat3(vec,roll):
 		target = Vector((0,1,0))
 		nor = vec.normalized()
 		axis = target.cross(nor)
@@ -245,7 +265,8 @@ class general_helper:
 		return mat
 	
 	#Blender Transformation Matrix converting functions
-	def mat3_to_vec_roll(self,mat):
+	@staticmethod
+	def mat3_to_vec_roll(mat):
 		vec = mat.col[1]
 		vecmat = self.vec_roll_to_mat3(mat.col[1], 0)
 		vecmatinv = vecmat.inverted()
@@ -253,7 +274,8 @@ class general_helper:
 		roll = atan2(rollmat[0][2], rollmat[2][2])
 		return vec, roll
 		
-	def create_boundingbox(self,vec1,vec2,name):
+	@staticmethod
+	def create_boundingbox(vec1,vec2,name):
 		comb=list(itertools.product(vec1,vec2))
 		v1,v2,v3=comb[0],comb[3],comb[6]
 		verts=list(itertools.product(v1,v2,v3))
@@ -266,7 +288,8 @@ class general_helper:
 		bpy.data.objects['Empty'].rotation_euler=Euler((0, -0.0, 0.0), 'XYZ')
 		bpy.data.objects['Empty'].name=name
 		
-	def create_prop(self,name,loc,rot):
+	@staticmethod
+	def create_prop(name,loc,rot):
 		
 		bpy.ops.object.empty_add(type='SINGLE_ARROW', location=loc, rotation=(rot[0]-radians(90), rot[2], rot[1]+radians(180)))
 		ob=bpy.data.objects['Empty']
@@ -282,7 +305,8 @@ class general_helper:
 		ob.scale=Vector((0.1,0.1,0.1))
 		return ob.name
 		
-	def object_bbox(self,object):
+	@staticmethod
+	def object_bbox(object):
 		
 		#Matrices
 		rot_x_mat=Matrix.Rotation(radians(-90),4,'X')
@@ -326,7 +350,8 @@ class general_helper:
 		return bbox1,bbox2
 
 
-	def paint_faces(self,object,color,layer_name):
+	@staticmethod
+	def paint_faces(object,color,layer_name):
 		bm=bmesh.from_edit_mesh(object.data)
 		collayer=bm.loops.layers.color[layer_name]
 		for f in bm.faces:
@@ -335,7 +360,8 @@ class general_helper:
 					l[collayer]=color
 		bmesh.update_edit_mesh(object.data, True)
 	
-	def auto_paint_mesh(self,object,layer_name):
+	@staticmethod
+	def auto_paint_mesh(object,layer_name):
 		scn=bpy.context.scene
 		bm=bmesh.new()
 		bm.from_mesh(object.data)
@@ -371,7 +397,8 @@ class general_helper:
 		bm.free() 
 	
 
-	def norm_to_col(self,x,axis):
+	@staticmethod
+	def norm_to_col(x,axis):
 		#converting normal Vector to Color Information
 		#Arguments:
 		#x:	normal Vector
@@ -399,7 +426,8 @@ class general_helper:
 			elif 1>=x>=0:
 				return -0.502*x+1   
 				
-	def crowd_col(self,ob,col,name):
+	@staticmethod
+	def crowd_col(ob,col,name):
 		me=bpy.data.objects[ob].data
 		coltex=me.vertex_colors.new(name=name)
 		

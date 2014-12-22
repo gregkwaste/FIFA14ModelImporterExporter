@@ -11,17 +11,26 @@ bl_info = {
 	"category": "Import-Export"}
 
 version=(0,65)
-import bpy,imp
+import bpy,imp,os
 from bpy.props import *
-fifa_operators_path='fifa_tools\\scripts\\fifa_operators.py'
-fifa_operators=imp.load_source('fifa_operators',fifa_operators_path)
+
+linux_path='/media/2tb/Blender/blender-2.71-windows64'
+
+#Detect different operating system
+
+if os.name=='nt': #windows detected
+	print('Windows Platform Detected')
+	prePath='' 
+else:
+	prePath=linux_path + os.sep
+
+fifa_operators_path='fifa_tools'+os.sep+'scripts'+os.sep+'fifa_operators.py'
+fifa_operators=imp.load_source('fifa_operators',prePath+fifa_operators_path)
 #fifa_operators=imp.load_compiled('fifa_operators','fifa_tools\\scripts\\fifa_operators.pyc')
 from fifa_operators import light_props as light_props
 version_text='v'+str(version[0]) + '.' + str(version[1]) + ', made by arti-10'
 game_version=" 15 "
 dev_status=1
-
-
 
 ###VERTEX GROUP PANEL###
 class CrowdSection(bpy.types.Panel):
@@ -666,6 +675,7 @@ default=(1.0, 1.0, 1.0),
 max=1.0,
 min=0
 )
+
 bpy.types.Scene.vx_color_hex=bpy.props.StringProperty(
 name='Hex Repr',
 )
@@ -679,6 +689,7 @@ items = [('rooffireworks','Roof Fireworks','Rooffireworks'),
 		('slc_benchplayerhome','Home Bench Player','Home Bench Player'),
 		('slc_camera_sitting','Camera Sitting','Camera Sitting'),
 		('slc_camera_standing','Camera Standing','Camera Standing'),
+		('slc_camera_handheld','Camera Handheld','Camera Handheld'),
 		('slc_generic','Generic','Generic'),
 		('slc_manageraway','Away Manager','Away Manager'),
 		('slc_managerhome','Home Manager','Home Manager'),
@@ -686,6 +697,9 @@ items = [('rooffireworks','Roof Fireworks','Rooffireworks'),
 		('slc_photographer','Photographer','Photographer'),
 		('slc_police','Police','Police'),
 		('slc_steward','Steward','Steward'),
+		('slc_assistantmanageraway','Assistant Manager Away','Assistant Manager Away'),
+		('slc_assistantmanagerhome','Assistant Manager Home','Assistant Manager Home'),
+		('slc_tournamentofficial','Tournament Prop','Tournament Prop')
 		],
 name = "Available Props")
 
@@ -960,3 +974,4 @@ def unregister():
 
 if __name__ == "__main__":
 	register()
+
