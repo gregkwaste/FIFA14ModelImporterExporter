@@ -1,4 +1,4 @@
-import bpy,os,webbrowser,imp,math,sys
+import bpy,os,webbrowser,imp,math,sys,struct
 from builtins import dir as class_dir
 from mathutils import Vector,Euler,Matrix
 from math import radians
@@ -524,19 +524,18 @@ class file_import(bpy.types.Operator) :
 				self.report({'ERROR'},'Corrupt File')
 				return {'CANCELLED'}
 			
-			
-			if path.split(sep='_')[-1].split(sep='.')[0]=='textures':
-				f.type='texture'
-				self.report({'ERROR'},'Texture detected in a Model Path')
+			if f.type=='textures':
+				#f.type='texture'
+				#self.report({'ERROR'},'Texture detected in a Model Path')
 				return {'CANCELLED'}
-			else:
-				f.type=path.split(sep='\\')[-1].split(sep='_')[0]
+			#else:
+			#	f.type=path.split(sep='\\')[-1].split(sep='_')[0]
 			
 			
 			##APPEND FILE TO FILE LIST
 			files.append([f,f.type])
 			
-			print('FILE TYPE DETECTED: ',f.type)
+			#print('FILE TYPE DETECTED: ',f.type)
 			
 			f.file_ident()
 			f.read_file_offsets(dir)
@@ -1435,6 +1434,8 @@ class file_overwrite(bpy.types.Operator) :
 			print('Total Files Modified ',progress)
 		return {'FINISHED'}
 
+
+###DEVELOPMENT PANEL###
 class batch_importer(bpy.types.Operator):
 	bl_idname="mesh.batch_import"
 	bl_label="Batch Import Models"
@@ -1466,6 +1467,32 @@ class batch_importer(bpy.types.Operator):
 				count+=1
 		return {'FINISHED'}
 		
+
+class rx3Unlocker(bpy.types.Operator):
+	bl_idname="system.rx3_unlock"
+	bl_label=".rx3 File Unlocker"
+
+	def invoke(self,context,event):
+		scn=bpy.context.scene
+
+		if not scn.model_import_path:
+			self.report({'ERROR'},'No file selected in the model import path')
+			return{'CANCELLED'}
+
+		f=open(scn.model_import_path,'rb')
+		path , filename=os.path.split(scn.model_import_path)
+		t=open(os.path.join(path,'temp.rx3'),"wb")
+		t.write(f.read(8))
+		size=struct.unpack('<I',f.read(4))[0]
+		t.write(struct.pack('<I',size))
+		t.write(f.read(size-0xC))
+		f.close()
+		os.remove(scn.model_import_path) #delete original file
+		os.rename(os.path.join(path,'temp.rx3'),scn.model_import_path)
+		return {'FINISHED'}
+
+
+
 class group_add(bpy.types.Operator):
 	bl_idname = "system.add_stad_groups"
 	bl_label = "Add Groups"

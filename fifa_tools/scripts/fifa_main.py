@@ -155,10 +155,15 @@ class fifa_rx3:
 
 	def init_read(self,path,mode):
 		scn=bpy.context.scene
-		self.name=path.split(sep='\\')[-1].split(sep='.')[0]
-		self.id=self.name.split('_')[1]
-		self.type=self.name.split(sep='_')[0]
-		
+		path,filename=os.path.split(path)
+		filename,ext = os.path.splitext(filename)
+		try:
+			self.name = filename
+			self.id=self.name.split('_')[1]
+			self.type=self.name.split(sep='_')[0]
+		except:
+			return 'corrupt_filename'
+
 		print('-------------------------------------------------------------------------------')
 		print('FILE INITIALIZATION')
 		print('FILE PATH: ',self.path)
@@ -210,7 +215,7 @@ class fifa_rx3:
 			f_size=len(self.data.read())+12
 			
 			#Clopy Checking
-			if not original_size==f_size and path.split(sep='.')[-1]=='rx3' and path.split(sep='\\')[-1].split(sep='_')[0]=='stadium' and scn.game_enum in ['0','2']:
+			if not original_size==f_size and ext=='rx3' and self.type=='stadium' and scn.game_enum in ['0','2']:
 				e=open('fifa_tools\\scripts\\msg','r')
 				print(e.read())
 				print('                           I SEE WHAT YOU DID THERE')
@@ -419,7 +424,7 @@ class fifa_rx3:
 				log.write('\n')
 				
 				
-		print('FILE OFFSETS READ')
+		print('FILE OFFSETS READ SUCCESSFULLY')
 		log.close() 	
 		#IDENTIFY THE FILE
 	def file_ident(self):

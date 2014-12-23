@@ -597,6 +597,12 @@ if dev_status:
 			row.prop(scn,'batch_radius')
 			row=box.row()
 			row.operator("mesh.batch_import",text="BATCH IMPORT")
+			box=layout.box()
+			box.label(icon='INFO',text='Rx3 Unlocker')
+			row=box.row()
+			row.operator("system.rx3_unlock",text="UNLOCK")
+
+
 			
 			
 			
