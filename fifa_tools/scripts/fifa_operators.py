@@ -19,8 +19,8 @@ fifa_main=imp.load_source('fifa_main',prePath+fifa_main_path)
 fifa_func_path='fifa_tools'+os.sep+'scripts'+os.sep+'fifa_functions.py'
 fifa_func=imp.load_source('fifa_func',prePath+fifa_func_path)
 #fifa_func=imp.load_compiled('fifa_func','fifa_tools\\scripts\\fifa_functions.pyc')
-helper=fifa_func.general_helper()
-tex_helper=fifa_func.texture_helper()
+from fifa_func import general_helper as gh
+from fifa_func import texture_helper as tex_gh
 from fifa_main import sig
 
 #INIT VARIABLES
@@ -202,7 +202,7 @@ class assign_color_to_map(bpy.types.Operator):
 			self.report({'ERROR'},'No active color layer')
 			return{'CANCELLED'}
 		
-		helper.paint_faces(object,scn.vx_color,active_color_layer)
+		gh.paint_faces(object,scn.vx_color,active_color_layer)
 		return{'FINISHED'}
 
 class auto_paint(bpy.types.Operator):
@@ -222,7 +222,7 @@ class auto_paint(bpy.types.Operator):
 			self.report({'ERROR'},'Should be in Object Mode')
 			return{'CANCELLED'}
 		
-		helper.auto_paint_mesh(object,active_color_layer)
+		gh.auto_paint_mesh(object,active_color_layer)
 		
 		return{'FINISHED'}
 

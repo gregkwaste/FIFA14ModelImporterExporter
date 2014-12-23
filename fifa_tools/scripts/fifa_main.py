@@ -22,6 +22,7 @@ from subprocess import call
 #half=imp.load_compiled('half','fifa_tools\\scripts\\half.pyc')
 
 sig='FIFA 3D Importer/Exporter, made by arti. v0.65. All rights reserved.©'
+
 #General gh Function Class
 from fifa_func import general_helper as gh
 from fifa_func import texture_helper as tex_gh
@@ -1134,6 +1135,7 @@ def write_textures_to_file(textures_list,type,id):
 	
 	scn=bpy.context.scene
 	status=texture_convert(textures_list)
+	print('Write Textures to file status: ',status)
 	if status.split(sep=',')[0]=='texture_path_error':
 		return 'missing_texture_file'
 	#Read converted textures and calculate offsets and texture information
@@ -1329,13 +1331,12 @@ def convert_mesh_init(object,mode):
 		off+=12
 		
 		
-		#if 'col0' in collist:
-		mesh_descr+='n0:'+'{:02X}'.format(off)+':00:0001:3s10n'+' '
-		mesh_descr_short.append('n0:3s10n')
-		off+=4
+		if len(collist)>=1:
+			mesh_descr+='n0:'+'{:02X}'.format(off)+':00:0001:3s10n'+' '
+			mesh_descr_short.append('n0:3s10n')
+			off+=4
 			
-			
-		if 'col1' in collist:
+		if len(collist)>=2:
 			mesh_descr+='g0:'+'{:02X}'.format(off)+':00:0001:3s10n'+' '
 			mesh_descr_short.append('g0:3s10n')
 			off+=4  

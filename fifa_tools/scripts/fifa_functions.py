@@ -385,13 +385,13 @@ class general_helper:
 				#norm.rotate(rot)
 				
 				if scn.autopaint_modes=='0':
-					l[collayer][0]=self.norm_to_col(round(-norm[1],3),0)
-					l[collayer][1]=self.norm_to_col(round(norm[2],3),2)
-					l[collayer][2]=self.norm_to_col(round(norm[0],3),1)
+					l[collayer][0]=general_helper.norm_to_col(round(-norm[1],3),0)
+					l[collayer][1]=general_helper.norm_to_col(round(norm[2],3),2)
+					l[collayer][2]=general_helper.norm_to_col(round(norm[0],3),1)
 				elif scn.autopaint_modes=='1':
-					l[collayer][0]=self.norm_to_col(round(-norm[0],3),0)
-					l[collayer][1]=self.norm_to_col(round(-norm[2]*0.00068,3),0)
-					l[collayer][2]=self.norm_to_col(round(-norm[1],3),1)
+					l[collayer][0]=general_helper.norm_to_col(round(-norm[0],3),0)
+					l[collayer][1]=general_helper.norm_to_col(round(-norm[2]*0.00068,3),0)
+					l[collayer][2]=general_helper.norm_to_col(round(-norm[1],3),1)
 			
 		bm.to_mesh(object.data)
 		bm.free() 
