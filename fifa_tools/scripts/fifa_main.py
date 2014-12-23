@@ -1381,7 +1381,7 @@ def convert_mesh_init(object,mode):
 		if scn.trophy_export_flag:
 			scale_mat=Matrix.Scale(100,4)
 		else:
-			scale_mat=Matrix.Scale(100,4)
+			scale_mat=Matrix.Scale(1000,4)
 		
 		#Forced to Use Old Way for N-gons
 		

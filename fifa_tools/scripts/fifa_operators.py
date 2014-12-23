@@ -1117,7 +1117,7 @@ class test_file_export(bpy.types.Operator) :
 			#stadium props handling
 			if scn.stadium_export_flag and item.type=='EMPTY' and item.name=='PROPS':
 				rot_x_mat=Matrix.Rotation(radians(-90),4,'X')
-				scale_mat=Matrix.Scale(100000,4)
+				scale_mat=Matrix.Scale(1000,4)
 				for child_item in item.children:
 					co=rot_x_mat*scale_mat*child_item.location
 					rot=(child_item.rotation_euler[0],child_item.rotation_euler[2],child_item.rotation_euler[1])
