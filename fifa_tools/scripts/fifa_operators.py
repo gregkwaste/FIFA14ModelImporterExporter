@@ -177,7 +177,7 @@ class colour_assign(bpy.types.Operator) :
 	def invoke(self, context, event) :
 		scn=context.scene
 		try:
-			scn.vx_color=helper.hex_to_rgb(scn.vx_color_hex)
+			scn.vx_color=gh.hex_to_rgb(scn.vx_color_hex)
 		except:
 			self.report({'ERROR'},'Malformed hex color')
 		return{'FINISHED'}
@@ -187,7 +187,7 @@ class get_color(bpy.types.Operator):
 	bl_label='Get Color'
 	def invoke(self,context,event):
 		scn=context.scene
-		scn.vx_color_hex=helper.rgb_to_hex((scn.vx_color.r*255,scn.vx_color.g*255,scn.vx_color.b*255))
+		scn.vx_color_hex=gh.rgb_to_hex((scn.vx_color.r*255,scn.vx_color.g*255,scn.vx_color.b*255))
 		return{'FINISHED'}
 
 class assign_color_to_map(bpy.types.Operator):
@@ -674,7 +674,7 @@ class file_import(bpy.types.Operator) :
 				
 				
 				for i in range(len(f.props)):
-					object_name=helper.create_prop(f.props[i],f.prop_positions[i],f.prop_rotations[i])
+					object_name=gh.create_prop(f.props[i],f.prop_positions[i],f.prop_rotations[i])
 				
 					if not 'PROPS' in bpy.data.objects:
 						bpy.ops.object.empty_add(type='PLAIN_AXES', location=(0,0,0))
@@ -786,7 +786,7 @@ class file_import(bpy.types.Operator) :
 				
 			clog.close()
 			crowd_name=fifa_main.createmesh(crowd_verts,crowd_faces,[],f.type,0,f.id,'crowd',[],False,[],scn.fifa_import_loc)
-			helper.crowd_col(crowd_name,crowd_col,'seat_colors') #Add the color layer
+			gh.crowd_col(crowd_name,crowd_col,'seat_colors') #Add the color layer
 			
 			
 			#Getting Crowd Types
@@ -930,7 +930,7 @@ class texture_export(bpy.types.Operator):
 			for item in bpy.data.objects:
 				if (scn.stadium_export_flag and item.type=='EMPTY' and item.name[0:5]=='stad_') or (scn.trophy_export_flag and item.type=='EMPTY' and item.name in ['BALL','TROPHY']):
 					for child_item in item.children:
-						item_texture_dict,item_textures_list,status=tex_helper.get_textures_list(child_item)
+						item_texture_dict,item_textures_list,status=tex_gh.get_textures_list(child_item)
 						texture_dict.update(item_texture_dict)
 						textures_list+=item_textures_list
 						if status=='material_missing':
@@ -1003,7 +1003,7 @@ class texture_export(bpy.types.Operator):
 				
 				if head_found:
 					#COMMON PROCEDURE
-					texture_dict,textures_list,status=tex_helper.get_textures_list(object)
+					texture_dict,textures_list,status=tex_gh.get_textures_list(object)
 					if status=='material_missing': #check for missing material
 						self.report({'ERROR'},'Missing Face Material')
 						return {'CANCELLED'}
@@ -1033,7 +1033,7 @@ class texture_export(bpy.types.Operator):
 				
 				if eyes_found:
 					#COMMON PROCEDURE
-					texture_dict,textures_list,status=tex_helper.get_textures_list(object)
+					texture_dict,textures_list,status=tex_gh.get_textures_list(object)
 					if status=='material_missing': #check for missing material
 						self.report({'ERROR'},'Missing Eyes Material')
 						return {'CANCELLED'}
@@ -1063,7 +1063,7 @@ class texture_export(bpy.types.Operator):
 					self.report({'ERROR'},'Hair Part not found')
 					return {'CANCELLED'}
 					
-				texture_dict,textures_list,status=tex_helper.get_textures_list(object)
+				texture_dict,textures_list,status=tex_gh.get_textures_list(object)
 				if status=='material_missing': #check for missing material
 					self.report({'ERROR'},'Missing Material')
 					return {'CANCELLED'}
@@ -1150,7 +1150,7 @@ class test_file_export(bpy.types.Operator) :
 					f.group_list.append([item.name,[0,0,0],[0,0,0],len(item.children),group_object_offset])
 					#Get Group Bounding Box Values
 					
-					f.group_list[-1][1],f.group_list[-1][2]=helper.object_bbox(item)
+					f.group_list[-1][1],f.group_list[-1][2]=gh.object_bbox(item)
 				
 				
 				print('Group Found: '+str(item.name))
@@ -1220,7 +1220,7 @@ class test_file_export(bpy.types.Operator) :
 								for i in range(len(local_texture_name_list)):
 									size+=len(local_texture_name_list[i])
 									size+=5
-								size=helper.size_round(size)
+								size=gh.size_round(size)
 								
 								#Material and texture Storage
 								f.material_dict[mat_name]=(mat_name,local_mat_name,local_texture_list,local_texture_name_list,size)

@@ -1570,7 +1570,7 @@ def texture_convert(textures_list):
 		
 		
 		if tex[1].split(sep='.')[-1]=='.dds':
-			copyfile(tex[1],'./fifa_tools'+tex[1].split(sep='\\')[-1].split(sep='.')[0]+'.dds')
+			copyfile(tex[1],'./fifa_tools//'+tex[1])
 		else:	
 			status=call(['./fifa_tools/nvidia_tools/nvdxt.exe','-file',tex[1],comp,'-nmips',str(nmips),'-outdir','./fifa_tools','-quality_production','-output',tex[1].split(sep='\\')[-1].split(sep='.')[0]+'.dds'])
 		
