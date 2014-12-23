@@ -1597,7 +1597,7 @@ def convert_mesh_collisions(object):
 	
 	#Matrices for position convertions
 	rot_x_mat=Matrix.Rotation(radians(-90),4,'X')
-	scale_mat=Matrix.Scale(100,4)
+	scale_mat=Matrix.Scale(1000,4)
 	for f in bm.faces:
 		if len(f.verts)==4:
 			v0=scale_mat*rot_x_mat*object.matrix_world*f.verts[0].co
