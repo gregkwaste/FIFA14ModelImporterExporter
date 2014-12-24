@@ -41,7 +41,8 @@ class texture_helper:
 	@staticmethod
 	def read_dds_header(offset):
 		data=[]
-		headers=open('fifa_tools\\dds_headers','rb')
+		path = os.path.join(prePath,'fifa_tools','dds_headers')
+		headers=open(path,'rb')
 		headers.seek(offset+16)
 		
 		for i in range(128):
@@ -71,7 +72,7 @@ class texture_helper:
 		
 		try:
 			mat=bpy.data.materials[object.material_slots[0].material.name]
-			for i in range(3):
+			for i in range(10):
 				try:
 					texture_name=mat.texture_slots[i].name
 					texture_image=bpy.data.textures[texture_name].image.name
