@@ -1598,8 +1598,8 @@ def texture_convert(textures_list):
 			#copyfile(tex[1],os.path.join(prePath,tex[1]))
 		else:	
 			status=call(['./fifa_tools/nvidia_tools/nvdxt.exe','-file',tex[1],comp,'-nmips',str(nmips),'-outdir','./fifa_tools','-quality_production','-output',filename+'.dds'])
-			tex[1]='.fifa_tools//'+filename+'.dds'
-		
+			tex[1]=os.path.join('fifa_tools',filename+'.dds')
+			
 		if status==4294967294:
 			return 'texture_path_error,'+tex[1]
 	
