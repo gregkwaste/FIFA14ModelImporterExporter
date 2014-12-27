@@ -1181,7 +1181,7 @@ def read_converted_textures(offset_list,textures_list,path):
 	for k in range(len(textures_list)):
 		print('Reading: ',textures_list[k][1])
 		ext_len=len(textures_list[k][1].split(sep='\\')[-1].split(sep='.')[-1])
-		t=open(textures_list[k][1].split(sep='\\')[-1][0:-ext_len-1]+'.dds','rb')
+		t=open(textures_list[k][1],'rb')
 		
 		width,height,mipmaps,textype=tex_gh.read_dds_info(t)
 		textures_list[k][3],textures_list[k][4],textures_list[k][5],textures_list[k][7]=width,height,mipmaps,textype
