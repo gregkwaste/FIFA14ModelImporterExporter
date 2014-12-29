@@ -987,10 +987,8 @@ class fifa_rx3:
 				mipmaps=self.texture_list[id][5]
 				if self.texture_list[id][7]=='DXT1':
 					divider=2
-					multiplier=2
 				if self.texture_list[id][7]=='DXT5':
 					comp_id=2
-					multiplier=4
 				t.seek(128)
 				
 				print('Current Texture: ',self.texture_list[id][1],w,h,mipmaps)
@@ -1001,8 +999,8 @@ class fifa_rx3:
 				#data
 				for j in range(mipmaps):
 					tw=w*h//divider
-					print('Writing mipmap: ',j, 'data: ',w,h,tw,self.data.tell())
-					#tw = size//(w*multiplier*divider)
+					pitch = w * 4 // divider #calculating texture pitch
+					print('Writing mipmap: ',j, 'data: ',pitch,tw//pitch,tw,self.data.tell())
 					
 					self.data.write(struct.pack('<4I',w,h,tw,0))
 					self.data.write(t.read(tw))
@@ -1730,25 +1728,6 @@ def write_crowd_file(f,object):
 		
 		f.write(struct.pack('<H',0)) #Padding
 		
-def group_bbox(group):
-	mins=[[],[],[]]
-	maxs=[[],[],[]]
-	
-	for i in range(len(group.children)):
-		vec1,vec2=object_bbox(group.children[i])
-		mins[0].append(vec1[0])
-		mins[1].append(vec1[1])
-		mins[2].append(vec1[2])
-		
-		maxs[0].append(vec2[0])
-		maxs[1].append(vec2[1])
-		maxs[2].append(vec2[2])
-		
-		
-		
-	return ((min(mins[0]),min(mins[1]),min(mins[2])),(max(maxs[0]),max(maxs[1]),max(maxs[2])))
-
-	
 
 def object_separate(ob):
 	
