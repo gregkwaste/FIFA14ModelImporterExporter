@@ -1142,7 +1142,7 @@ class test_file_export(bpy.types.Operator) :
 					f.group_list.append([item.name,[0,0,0],[0,0,0],len(item.children),group_object_offset])
 					#Get Group Bounding Box Values
 					
-					f.group_list[-1][1],f.group_list[-1][2]=gh.object_bbox(item)
+					f.group_list[-1][1],f.group_list[-1][2]=gh.group_bbox(item)
 				
 				
 				print('Group Found: '+str(item.name))

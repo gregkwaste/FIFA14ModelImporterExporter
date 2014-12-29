@@ -350,6 +350,25 @@ class general_helper:
 		
 		return bbox1,bbox2
 
+	@staticmethod
+	def group_bbox(group):
+		mins=[[],[],[]]
+		maxs=[[],[],[]]
+		
+		for i in range(len(group.children)):
+			vec1,vec2=object_bbox(group.children[i])
+			mins[0].append(vec1[0])
+			mins[1].append(vec1[1])
+			mins[2].append(vec1[2])
+			
+			maxs[0].append(vec2[0])
+			maxs[1].append(vec2[1])
+			maxs[2].append(vec2[2])
+			
+			
+			
+		return ((min(mins[0]),min(mins[1]),min(mins[2])),(max(maxs[0]),max(maxs[1]),max(maxs[2])))
+
 
 	@staticmethod
 	def paint_faces(object,color,layer_name):
