@@ -372,7 +372,7 @@ class general_helper:
         maxs = [[], [], []]
 
         for i in range(len(group.children)):
-            vec1, vec2 = self.object_bbox(group.children[i])
+            vec1, vec2 = general_helper.object_bbox(group.children[i])
             mins[0].append(vec1[0])
             mins[1].append(vec1[1])
             mins[2].append(vec1[2])
