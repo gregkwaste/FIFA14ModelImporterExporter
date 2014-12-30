@@ -1000,9 +1000,9 @@ class fifa_rx3:
 				for j in range(mipmaps):
 					tw=w*h//divider
 					pitch = w * 4 // divider #calculating texture pitch
-					print('Writing mipmap: ',j, 'data: ',pitch,tw//pitch,tw,self.data.tell())
+					#print('Writing mipmap: ',j, 'data: ',pitch,tw//pitch,tw,self.data.tell())
 					
-					self.data.write(struct.pack('<4I',w,h,tw,0))
+					self.data.write(struct.pack('<4I',pitch,tw//pitch,tw,0))
 					self.data.write(t.read(tw))
 					#print(tw)
 					w=max(w//2,4)
