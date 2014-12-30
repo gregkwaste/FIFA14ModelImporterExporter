@@ -90,11 +90,11 @@ class texture_helper:
                     texture_maxsize = max(
                         bpy.data.images[texture_image].size[0], bpy.data.images[texture_image].size[1])
 
-                    if not texture_name in texture_dict:
-                        textures_list.append(
-                            [texture_name, texture_path, texture_alpha, 0, 0, 0, 0, '', texture_maxsize])
+                    #if not texture_name in texture_dict:
+                    textures_list.append(
+                        [texture_name, texture_path, texture_alpha, 0, 0, 0, 0, '', texture_maxsize])
                         # store texture_information indexed in the dictionary
-                        texture_dict[texture_name] = len(textures_list)
+                    texture_dict[texture_name] = len(textures_list)
                 except:
                     print('Empty Texture Slot')
         except:
