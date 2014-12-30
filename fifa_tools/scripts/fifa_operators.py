@@ -31,6 +31,7 @@ from fifa_func import texture_helper as tex_gh
 from fifa_main import sig
 
 # INIT VARIABLES
+'testing'
 f = 0
 e = 0
 ddsheader = '10'
