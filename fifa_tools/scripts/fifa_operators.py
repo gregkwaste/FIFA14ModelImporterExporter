@@ -31,7 +31,6 @@ from fifa_func import texture_helper as tex_gh
 from fifa_main import sig
 
 # INIT VARIABLES
-'testing'
 f = 0
 e = 0
 ddsheader = '10'
@@ -951,18 +950,13 @@ class texture_export(bpy.types.Operator):
                     for child_item in item.children:
                         item_texture_dict, item_textures_list, status = tex_gh.get_textures_list(child_item)
                         texture_dict.update(item_texture_dict)
-                        textures_list += item_textures_list
+                        for t in item_textures_list:
+                            if not t in textures_list:
+                                textures_list.append(t)
+                        #textures_list += item_textures_list
                         if status == 'material_missing':
                             self.report({'ERROR'}, 'Missing Material')
                             return {'CANCELLED'}
-
-            #Filter out the texture dictionary and the texture list
-            textures_list = list(set(textures_list))
-            temp = {}
-            for key, value in texture_dict:
-                if not value in temp.values():
-                    temp[key] = value
-            texture_dict = temp
 
             if scn.trophy_export_flag:
                 type = 'trophy-ball_'  # fix file naming for trophy or ball
