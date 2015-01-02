@@ -1,4 +1,4 @@
-import bpy,imp,os,struct,bmesh,zlib
+import bpy,imp,os,struct,bmesh,zlib,sys
 from io import BytesIO
 from shutil import copyfile
 
@@ -1158,13 +1158,16 @@ def write_textures_to_file(textures_list,type,id):
 		return 'missing_texture_file'
 	#Read converted textures and calculate offsets and texture information
 	f.offset_list,f.texture_list=read_converted_textures(f.offset_list,textures_list,'fifa_tools\\')
-	print(f.offset_list)
+	#print(f.offset_list)
+	[print(i) for i in f.texture_list]
+
 	#Calling Writing to file Functions
 	
 	try:
 		f.write_offsets_to_file()
 		f.write_offset_data_to_file('fifa_tools\\')
 	except:
+		print(sys.exc_info()[0])
 		print('ERROR ON TEXTURE WRITING')
 		f.data.close()
 		return 'error'
@@ -1188,7 +1191,7 @@ def read_converted_textures(offset_list,textures_list,path):
 		width,height,mipmaps,textype=tex_gh.read_dds_info(t)
 		textures_list[k][3],textures_list[k][4],textures_list[k][5],textures_list[k][7]=width,height,mipmaps,textype
 		t.close()
-		#print(width,height,mipmaps,textype)
+		print(width,height,mipmaps,textype)
 		
 		phys_size=width*height
 		divider=1
@@ -1595,8 +1598,11 @@ def texture_convert(textures_list):
 		filename,ext = os.path.splitext(filename)
 		
 
-		if ext=='.dds' or os.path.isfile(os.path.join('fifa_tools', filename + '.dds')):
+		if ext=='.dds':
+			#print('Texture in DDS format')
 			pass
+		elif os.path.isfile(os.path.join('fifa_tools', filename + '.dds')):
+			tex[1]=os.path.join('fifa_tools',filename+'.dds')
 			#print('Texture Exists')
 			#copyfile(tex[1],os.path.join(prePath,tex[1]))
 		else:	
