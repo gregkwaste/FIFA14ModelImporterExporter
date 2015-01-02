@@ -96,7 +96,10 @@ class texture_helper:
                         # store texture_information indexed in the dictionary
                     texture_dict[texture_name] = len(textures_list)
                 except:
-                    print('Empty Texture Slot')
+                    #Found Empty Texture Slot
+                    #print('Empty Texture Slot')
+                    pass
+
         except:
             status = 'material_missing'
 

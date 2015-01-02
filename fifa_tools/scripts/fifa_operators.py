@@ -115,7 +115,7 @@ standard_materials = ['adboard', 'adboarddigital', 'adboarddigitalglow', 'adboar
                       'bannergroup', 'bannerhome', 'concrete', 'concreteshadow', 'crest', 'diffusealpha', 'diffuseopaque', 'diffusesimple', 'diffusewet', 'envmetal', 'genericad', 'glass',
                       'homeprimary', 'homesecondary', 'initialshadinggroup', 'jumbotron', 'metalbare', 'metalpainted', 'pitch', 'pitchnoline', 'rubbershadow', 'sclockhalves', 'sclockminutesones',
                       'sclockminutestens', 'sclockscoreawayones', 'sclockscoreawaytens', 'sclockscorehomeones', 'sclockscorehometens', 'sclocksecondsones', 'sclocksecondstens', 'sclocktimeanalog',
-                      'simpleglow', 'sky', 'snowplie', 'tournament']
+                      'simpleglow', 'sky', 'snowpile', 'tournament']
 
 # OPERATORS
 
@@ -970,6 +970,9 @@ class texture_export(bpy.types.Operator):
                 return {'CANCELLED'}
             elif status == 'success':
                 self.report({'INFO'}, 'Textures exported Successfully')
+            elif status == 'error':
+            	self.report({'ERROR'}, 'File Error')
+
 
         if scn.gen_overwriter_flag:
             print('EXPORTING TEXTURES IN OVERWRITING MODE')

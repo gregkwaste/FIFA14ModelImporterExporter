@@ -423,6 +423,8 @@ class fifa_rx3:
 				self.mesh_count+=1
 							
 				log.write('\n')
+			else:
+				print("UNKNOWN OFFSET: ", offset[0])
 				
 				
 		print('FILE OFFSETS READ SUCCESSFULLY')
@@ -872,7 +874,7 @@ class fifa_rx3:
 					self.data.write(b'\x00')
 				for j in range(len(self.texture_list)):
 					self.data.write(struct.pack('<I',2047566042))
-					
+					print(self.texture_list[j])
 					if type(self.texture_list[j])==type(''):
 						s = bytes(self.texture_list[j], 'utf-8')
 						self.data.write(struct.pack('<I',len(self.texture_list[j])+1))
@@ -991,7 +993,7 @@ class fifa_rx3:
 					comp_id=2
 				t.seek(128)
 				
-				print('Current Texture: ',self.texture_list[id][1],w,h,mipmaps)
+				print('Writing Texture: ',self.texture_list[id][1],w,h,mipmaps)
 
 				#Write texture
 				#header
@@ -1156,14 +1158,16 @@ def write_textures_to_file(textures_list,type,id):
 		return 'missing_texture_file'
 	#Read converted textures and calculate offsets and texture information
 	f.offset_list,f.texture_list=read_converted_textures(f.offset_list,textures_list,'fifa_tools\\')
-	
-	
-	
+	print(f.offset_list)
 	#Calling Writing to file Functions
 	
-	f.write_offsets_to_file()
-	f.write_offset_data_to_file('fifa_tools\\')
-	
+	try:
+		f.write_offsets_to_file()
+		f.write_offset_data_to_file('fifa_tools\\')
+	except:
+		print('ERROR ON TEXTURE WRITING')
+		f.data.close()
+		return 'error'
 	#Signature
 	f.data.seek(f.offset_list[-1][1])
 	f.data.seek(f.offset_list[-1][2],1)
@@ -1177,14 +1181,14 @@ def read_converted_textures(offset_list,textures_list,path):
 	offset_list.append((1808827868,len(textures_list)*16+48,len(textures_list)*16+16))
 	
 	for k in range(len(textures_list)):
-		print('Reading: ',textures_list[k][1])
+		#print('Reading: ',textures_list[k][1])
 		ext_len=len(textures_list[k][1].split(sep='\\')[-1].split(sep='.')[-1])
 		t=open(textures_list[k][1],'rb')
 		
 		width,height,mipmaps,textype=tex_gh.read_dds_info(t)
 		textures_list[k][3],textures_list[k][4],textures_list[k][5],textures_list[k][7]=width,height,mipmaps,textype
 		t.close()
-		print(width,height,mipmaps,textype)
+		#print(width,height,mipmaps,textype)
 		
 		phys_size=width*height
 		divider=1
@@ -1587,12 +1591,13 @@ def texture_convert(textures_list):
 			nmips=1
 		
 		path,filename = os.path.split(tex[1])
-		
+		#print(filename)
 		filename,ext = os.path.splitext(filename)
-		print(filename,ext)
+		
 
-		if ext=='.dds':
-			print('Texture Exists')
+		if ext=='.dds' or os.path.isfile(os.path.join('fifa_tools', filename + '.dds')):
+			pass
+			#print('Texture Exists')
 			#copyfile(tex[1],os.path.join(prePath,tex[1]))
 		else:	
 			status=call(['./fifa_tools/nvidia_tools/nvdxt.exe','-file',tex[1],comp,'-nmips',str(nmips),'-outdir','./fifa_tools','-quality_production','-output',filename+'.dds'])
