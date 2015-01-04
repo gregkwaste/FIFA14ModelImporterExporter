@@ -1,7 +1,7 @@
 # README #
-#Official FIFA 14 3D Importer/Exporter Repository
+#Official FIFA 3D Importer/Exporter Repository
 
-Current WIP version 0.64
+Current WIP version 0.66
 
 
 
