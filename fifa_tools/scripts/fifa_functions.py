@@ -90,13 +90,13 @@ class texture_helper:
                     texture_maxsize = max(
                         bpy.data.images[texture_image].size[0], bpy.data.images[texture_image].size[1])
 
-                    #if not texture_name in texture_dict:
+                    # if not texture_name in texture_dict:
                     textures_list.append(
                         [texture_name, texture_path, texture_alpha, 0, 0, 0, 0, '', texture_maxsize])
                         # store texture_information indexed in the dictionary
                     texture_dict[texture_name] = len(textures_list)
                 except:
-                    #Found Empty Texture Slot
+                    # Found Empty Texture Slot
                     #print('Empty Texture Slot')
                     pass
 
@@ -146,6 +146,11 @@ class general_helper:
         val_1 = ((val >> 10) & 0x3ff) / 1023
         val_2 = ((val >> 20) & 0x3ff) / 1023
         return((val_2, val_1, val_0))
+
+    @staticmethod
+    def read_cols_testing(f):
+        val = struct.unpack('<4B', f.read(4))
+        return (val[0], -val[2], val[1])
 
         ##READ AND STORE FACE DATA#
     @staticmethod
@@ -197,9 +202,9 @@ class general_helper:
                 f.seek(back + indiceslength)
                 continue
             else:
-                if flag == False:
+                if flag is False:
                     faces.append((temp[0], temp[1], temp[2]))
-                elif flag == True:
+                elif flag is True:
                     faces.append((temp[2], temp[1], temp[0]))
 
                 flag = not flag
@@ -397,7 +402,7 @@ class general_helper:
         bmesh.update_edit_mesh(object.data, True)
 
     @staticmethod
-    def auto_paint_mesh(object, layer_name):
+    def auto_paint_mesh(object):
         scn = bpy.context.scene
         bm = bmesh.new()
         bm.from_mesh(object.data)
@@ -405,66 +410,144 @@ class general_helper:
         # base_0=0.498
         # base_1=0.502
 
-        obj_rotation = object.rotation_euler
-        print(obj_rotation)
-        collayer = bm.loops.layers.color[layer_name]
+        #obj_rotation = object.rotation_euler
+        #print(obj_rotation)
 
-        for f in bm.faces:
-            for l in f.loops:
-                vert = l.vert
-
-                #rot=Euler((-1.5707963705062866, 0.0, 0.0), 'XYZ')
-                norm = vert.normal
-                # norm.rotate(obj_rotation)
-                norm.normalize()
-
-                # norm.rotate(rot)
-
-                if scn.autopaint_modes == '0':
+        if scn.autopaint_modes == '0':
+            collayer = bm.loops.layers.color.new('normalmap')
+            for f in bm.faces:
+                for l in f.loops:
+                    vert = l.vert
+                    #rot=Euler((-1.5707963705062866, 0.0, 0.0), 'XYZ')
+                    norm = vert.normal
+                    # norm.rotate(obj_rotation)
+                    #norm.normalize()
+                    # norm.rotate(rot)
+                    l[collayer].r = general_helper.norm_to_col(
+                        round(-norm[1], 3))
+                    l[collayer].g = general_helper.norm_to_col(
+                        round(norm[2], 3))
+                    l[collayer].b = general_helper.norm_to_col(
+                        round(norm[0], 3))
+        elif scn.autopaint_modes == '1':
+            collayer = bm.loops.layers.color.new('fnormalmap')
+            for f in bm.faces:
+                for l in f.loops:
+                    vert = l.vert
+                    #rot=Euler((-1.5707963705062866, 0.0, 0.0), 'XYZ')
+                    norm = vert.normal
+                    # norm.rotate(obj_rotation)
+                    norm.normalize()
+                    # norm.rotate(rot)
                     l[collayer][0] = general_helper.norm_to_col(
-                        round(-norm[1], 3), 0)
+                        round(-norm[0], 3))
                     l[collayer][1] = general_helper.norm_to_col(
-                        round(norm[2], 3), 2)
+                        round(-norm[2] * 0.00068, 3))
                     l[collayer][2] = general_helper.norm_to_col(
-                        round(norm[0], 3), 1)
-                elif scn.autopaint_modes == '1':
-                    l[collayer][0] = general_helper.norm_to_col(
-                        round(-norm[0], 3), 0)
-                    l[collayer][1] = general_helper.norm_to_col(
-                        round(-norm[2] * 0.00068, 3), 0)
-                    l[collayer][2] = general_helper.norm_to_col(
-                        round(-norm[1], 3), 1)
+                        round(-norm[1], 3))
+        elif scn.autopaint_modes == '2':
+            try:
+                lm = bm.loops.layers.uv[1]
+            except:
+                print("Missing lightmap layer")
+                return
+            collayerTangents = bm.loops.layers.color.new('tangents')
+            collayerBitangents = bm.loops.layers.color.new('binormals')
+            vtanlist = [Vector((0.0, 0.0, 0.0))] * len(bm.verts)
+            vbitanlist = [Vector((0.0, 0.0, 0.0))] * len(bm.verts)
+
+            # Calculating tangents
+            for i in range(len(bm.faces)):
+                f = bm.faces[i]
+                l0, l1, l2 = f.loops[0], f.loops[1], f.loops[2]
+                v0, v1, v2 = l0.vert.index, l1.vert.index, l2.vert.index
+                #print('Working on face: ', i, 'Vertices: ', f.loops[0].vert.index, f.loops[1].vert.index,
+                #      f.loops[2].vert.index)
+
+                # Checking first 3 loops/verts
+                tangent = general_helper.calc_tangent(l0, l1, l2, lm)
+                vtanlist[v0] = (tangent + vtanlist[v0])
+                vtanlist[v1] = (tangent + vtanlist[v1])
+                vtanlist[v2] = (tangent + vtanlist[v2])
+
+                #print(vtanlist[0], 'first value')
+                vbitanlist[v0] = (l0.vert.normal.cross(tangent) + vbitanlist[v0])
+                vbitanlist[v1] = (l1.vert.normal.cross(tangent) + vbitanlist[v0])
+                vbitanlist[v2] = (l2.vert.normal.cross(tangent) + vbitanlist[v0])
+
+                # if len(f.loops) == 4:
+                #    tangent = general_helper.calc_tangent(f.loops[3], f.loops[1], f.loops[2], lm)
+                #    vtanlist[f.loops[3].vert.index] += tangent
+                #    vtanlist[f.loops[1].vert.index] += tangent
+                #    vtanlist[f.loops[2].vert.index] += tangent
+
+                #    vbitanlist[f.loops[3].vert.index] += f.loops[3].vert.normal.cross(tangent)
+                #    vbitanlist[f.loops[1].vert.index] += f.loops[1].vert.normal.cross(tangent)
+                #    vbitanlist[f.loops[2].vert.index] += f.loops[2].vert.normal.cross(tangent)
+
+            # Passing tangents/bitangents to color maps
+            for f in bm.faces:
+                for l in f.loops:
+                    vert = l.vert
+                    tangent = vtanlist[vert.index]
+                    #tangent[1] = 500 * tangent[1]
+                    #tangent = tangent - vert.normal * \
+                    #    (vert.normal.dot(tangent))
+                    tangent.normalize()
+
+                    bitangent = vbitanlist[vert.index]
+                    bitangent.normalize()
+                    # bitangent.normalize()
+                    if vert.index == 294:
+                        print(tangent)
+
+                    l[collayerTangents][0] = general_helper.norm_to_col(round(tangent[0], 3))
+                    l[collayerTangents][1] = general_helper.norm_to_col(round(tangent[2], 3))
+                    l[collayerTangents][2] = general_helper.norm_to_col(round(-tangent[1], 3))
+
+                    l[collayerBitangents][0] = general_helper.norm_to_col(round(bitangent[0], 3))
+                    l[collayerBitangents][1] = general_helper.norm_to_col(round(bitangent[2], 3))
+                    l[collayerBitangents][2] = general_helper.norm_to_col(round(-bitangent[1], 3))
 
         bm.to_mesh(object.data)
         bm.free()
 
     @staticmethod
-    def norm_to_col(x, axis):
+    def calc_tangent(l0, l1, l2, lm):
+        delta1 = l1.vert.co - l0.vert.co
+        delta2 = l2.vert.co - l0.vert.co
+        deltauv1 = l1[lm].uv - l0[lm].uv
+        deltauv2 = l2[lm].uv - l0[lm].uv
+
+        r = 1.0 / (deltauv1.x * deltauv2.y - deltauv1.y * deltauv2.x)
+
+        if l0.vert.index == 294 or l1.vert.index == 294 or l2.vert.index == 294:
+            print('Real Coords: ', l2.vert.co)
+            print(delta1, delta2, deltauv1, deltauv2, r)
+        tangent = (delta1 * deltauv2.y - delta2 * deltauv1.y) * r
+
+        return tangent
+
+    @staticmethod
+    def norm_to_col(x):
         # converting normal Vector to Color Information
         # Arguments:
-        # x:	normal Vector
+        # x:    normal Vector
         # axis: desired axis
 
-        try:
-            angle = Vector((x, 0)).angle_signed(Vector((1, 0)))
-        except:
-            angle = 0
+        # if angle <= 0:
 
-        if angle <= 0:
-
-            if x == -1:
-                return 0.502
-            elif -1 < x < 0:
-                return -0.502 * x
-            elif 1 >= x >= 0:
-                return 0.498 * x
-        else:
-            if x == -1:
-                return 0.502
-            elif -1 < x < 0:
-                return 0.498 * x + 1
-            elif 1 >= x >= 0:
-                return -0.502 * x + 1
+        if -1 <= x < 0:
+            return -0.502 * x
+        elif x >= 0:
+            return 0.498 * x
+        # else:
+        #     if x == -1:
+        #         return 0.502
+        #     elif -1 < x < 0:
+        #         return 0.498 * x + 1
+        #     elif 1 >= x >= 0:
+        #         return -0.502 * x + 1
 
     @staticmethod
     def crowd_col(ob, col, name):

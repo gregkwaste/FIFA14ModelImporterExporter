@@ -230,20 +230,19 @@ class auto_paint(bpy.types.Operator):
     bl_label = 'Auto Mesh Paint'
 
     def invoke(self, context, event):
-        scn = context.scene
         object = context.object
-        try:
-            active_color_layer = object.data.vertex_colors.active.name
-        except:
-            self.report({'ERROR'}, 'No active color layer')
-            return{'CANCELLED'}
+        #try:
+        #    active_color_layer = object.data.vertex_colors.active.name
+        #except:
+        #    self.report({'ERROR'}, 'No active color layer')
+        #    return{'CANCELLED'}
 
         # Context Mode Check
         if context.mode == 'EDIT_MESH':
             self.report({'ERROR'}, 'Should be in Object Mode')
             return{'CANCELLED'}
 
-        gh.auto_paint_mesh(object, active_color_layer)
+        gh.auto_paint_mesh(object)
 
         return{'FINISHED'}
 

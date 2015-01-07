@@ -63,11 +63,7 @@ def createmesh(verts,faces,uvs,name,count,id,subname,colors,normal_flag,normals,
 		collayer=bm.loops.layers.color['col'+str(i)]
 		for f in bm.faces:
 				for l in f.loops:
-						l[collayer].r=colors[i][l.vert.index][0]
-						l[collayer].g=colors[i][l.vert.index][1]
-						l[collayer].b=colors[i][l.vert.index][2]
-			
-	
+					l[collayer].r, l[collayer].g, l[collayer].b = colors[i][l.vert.index]
 	
 	#Pass Normals
 	if normal_flag==True:
@@ -423,8 +419,7 @@ class fifa_rx3:
 				self.mesh_count+=1
 							
 				log.write('\n')
-			else:
-				print("UNKNOWN OFFSET: ", offset[0])
+			
 				
 				
 		print('FILE OFFSETS READ SUCCESSFULLY')
@@ -1365,7 +1360,7 @@ def convert_mesh_init(object,mode):
 			mesh_descr+='g0:'+'{:02X}'.format(off)+':00:0001:3s10n'+' '
 			mesh_descr_short.append('g0:3s10n')
 			off+=4  
-			
+
 		for i in range(uvlen):
 			mesh_descr+='t'+str(i)+':'+'{:02X}'.format(off)+':00:0001:2f16'+' '
 			mesh_descr_short.append('t'+str(i)+':2f16')
@@ -1379,6 +1374,12 @@ def convert_mesh_init(object,mode):
 			mesh_descr+='w0:'+'{:02X}'.format(off)+':00:0001:4u8'+' '
 			mesh_descr_short.append('w0:4u8')
 			off+=4
+
+		if len(collist)>=3:
+			mesh_descr+='b0:'+'{:02X}'.format(off)+':00:0001:3s10n'+' '
+			mesh_descr_short.append('b0:3s10n')
+			off+=4  
+
 		
 		mesh_descr=mesh_descr[0:-1]
 		print(mesh_descr_short)
@@ -1387,12 +1388,12 @@ def convert_mesh_init(object,mode):
 		return collist,boundbox,mesh_descr,mesh_descr_short,off-last  
 	
 	elif mode==1:
-		uvs_0=[]
-		uvs_1=[]
-		uvs_2=[]
-		col_0=[]
-		col_1=[]
-		col_2=[]
+		#uvs_0=[]
+		#uvs_1=[]
+		#uvs_2=[]
+		#col_0=[]
+		#col_1=[]
+		#col_2=[]
 		id=0
 		
 		#Matrices
