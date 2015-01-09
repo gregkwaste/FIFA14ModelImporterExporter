@@ -1,4 +1,5 @@
 import bpy,imp,os,struct,bmesh,zlib,sys
+from math import radians, degrees
 from io import BytesIO
 from shutil import copyfile
 
@@ -1260,25 +1261,20 @@ def crowd_seat_create(v_num,h_num,v_dist,h_dist,gap,context):
 				found_crowd=True
 				break
 		
-	try:
-		print(found_object)
-	except:
-		print('Object not found')
-		
-	print(bm)
 	cursor_loc=Vector((scn.cursor_location[0],scn.cursor_location[1],scn.cursor_location[2]))
+	val = 0.1
 	for i in range(v_num):
 		for j in range(h_num):
-			bm.faces.new((bm.verts.new(Vector((cursor_loc[0]+0.01,cursor_loc[1]+0.01,cursor_loc[2]-0.01))),
-						bm.verts.new(Vector((cursor_loc[0]-0.01,cursor_loc[1]+0.01,cursor_loc[2]-0.01))),
-						bm.verts.new(Vector((cursor_loc[0]-0.01,cursor_loc[1]-0.01,cursor_loc[2]+0.01))),
-						bm.verts.new(Vector((cursor_loc[0]+0.01,cursor_loc[1]-0.01,cursor_loc[2]+0.01))))
+			bm.faces.new((bm.verts.new(Vector((cursor_loc[0]+val,cursor_loc[1]+val,cursor_loc[2]-val))),
+						bm.verts.new(Vector((cursor_loc[0]-val,cursor_loc[1]+val,cursor_loc[2]-val))),
+						bm.verts.new(Vector((cursor_loc[0]-val,cursor_loc[1]-val,cursor_loc[2]+val))),
+						bm.verts.new(Vector((cursor_loc[0]+val,cursor_loc[1]-val,cursor_loc[2]+val))))
 						)
 			
-			cursor_loc[0]-=h_dist*0.01
+			cursor_loc[0]-=h_dist*val
 		cursor_loc[0]=scn.cursor_location[0]
-		cursor_loc[1]+=gap*0.01
-		cursor_loc[2]-=v_dist*0.01
+		cursor_loc[1]+=gap*val
+		cursor_loc[2]-=v_dist*val
 			
 	bm.normal_update()
 	
@@ -1537,11 +1533,11 @@ def read_crowd_15(file):
 		return
 	file.data.read(2)
 	count=struct.unpack('<H',file.data.read(2))[0]
-	print(count)
+	print('Seat Count: ',count)
 	t=open('crowd_log.txt','w')
 	
 	if scn.game_enum=="2":
-		skip=9
+		skip=7
 	else:
 		skip=19
 		
@@ -1570,13 +1566,13 @@ def read_crowd_15(file):
 		colorrgb=(r,g,b)
 		#print(colorrgb) 
 		#print(color)
-		#   file.data.read(1)
 		
 		
-		c_status=struct.unpack('<B',file.data.read(1))[0]
-		c_attendance=struct.unpack('<B',file.data.read(1))[0]
+		#Saving Testing Values
+		c_status = struct.unpack('<4B',file.data.read(4))
+		#c_attendance=struct.unpack('<B',file.data.read(1))[0]
 		t.write(str(c_status)+'       '+str(file.data.read(skip))+'\n')
-		file.crowd.append((verts,zrot,c_status,c_attendance,colorrgb,color))
+		file.crowd.append((verts, zrot, c_status, colorrgb, color))
 	t.close()
 
 def texture_convert(textures_list):
@@ -1736,7 +1732,8 @@ def write_crowd_file(f,object):
 			f.write(struct.pack('<5B',0,0,0,127,51)) #Empty
 		
 		
-		f.write(struct.pack('<4f',1,1,0,1)) #Some Values
+		#f.write(struct.pack('<4f',1,1,0,1)) #Some Values Fifa 14
+		f.write(struct.pack('<9B', 0, 0, 0, 0, 0, 0, 0, 0, 0)) #Some Values
 		
 		f.write(struct.pack('<H',0)) #Padding
 		

@@ -557,7 +557,7 @@ class general_helper:
         bm = bmesh.new()
         bm.from_mesh(me)
 
-        collayer = bm.loops.layers.color[name]
+        collayer = bm.loops.layers.color.new(name)
         for f in bm.faces:
             for l in f.loops:
                 l[collayer].r = col[f.index][0]

@@ -127,14 +127,14 @@ class align_crowd_faces(bpy.types.Operator):
 
     def invoke(self, context, event):
         scn = bpy.context.scene
-        ob = bpy.context.object
+        #ob = bpy.context.object
 
-        vec_dict = {    0: Vector((0, 0, 0)),
-                     1: Vector((1, 0)),
-                     2: Vector((0, 1)),
-                     3: Vector((-1, 0)),
-                     4: Vector((0, -1))
-                     }
+        vec_dict = {0: Vector((scn.cursor_location.x, scn.cursor_location.y)),
+                    1: Vector((1, 0)),
+                    2: Vector((0, 1)),
+                    3: Vector((-1, 0)),
+                    4: Vector((0, -1))
+                    }
 
         align_vector = vec_dict[int(scn.crowd_align_enum)]
 
@@ -294,7 +294,7 @@ class lights_export(bpy.types.Operator):
         indent += 1
         xmlstring += indent * '\t'
 
-        xmlstring += fifa_func.write_xml_param('iCullBehavior', 0, 0)
+        xmlstring += fifa_main.write_xml_param('iCullBehavior', 0, 0)
 
         for ob in scn.objects:
             if ob.name[0:7] == 'LIGHTS_':
@@ -308,7 +308,7 @@ class lights_export(bpy.types.Operator):
                 indent += 1
 
                 xmlstring += indent * '\t'
-                xmlstring += fifa_func.write_xml_param(
+                xmlstring += fifa_main.write_xml_param(
                     'iNumParticlesMax', 0, len(ob.children))
 
                 # EMITBOX PART
@@ -321,7 +321,7 @@ class lights_export(bpy.types.Operator):
 
                     if attr in light_props:
                         xmlstring += indent * '\t'
-                        xmlstring += fifa_func.write_xml_param(
+                        xmlstring += fifa_main.write_xml_param(
                             attr, 0, getattr(ob.emitbox_props, attr))
 
                 for i in range(len(ob.children)):
@@ -330,7 +330,7 @@ class lights_export(bpy.types.Operator):
                         co = child.location
                         co = scale_mat * rot_x_mat * co
                         xmlstring += indent * '\t'
-                        xmlstring += fifa_func.write_xml_param(
+                        xmlstring += fifa_main.write_xml_param(
                             'vCenter', i, (round(co[0], 5), round(co[1], 5), round(co[2], 5)))
 
                 indent -= 1
@@ -348,7 +348,7 @@ class lights_export(bpy.types.Operator):
                     cl_name = entry.__class__.__name__
                     if cl_name == 'str':
                         try:
-                            param = fifa_func.write_xml_param(
+                            param = fifa_main.write_xml_param(
                                 entry, 0, getattr(ob.actionrender_props, entry))
                             xmlstring += indent * '\t'
                             xmlstring += param
@@ -358,7 +358,7 @@ class lights_export(bpy.types.Operator):
                     elif cl_name == 'list':
                         if entry[0] == 'sShader':
                             xmlstring += indent * '\t'
-                            xmlstring += fifa_func.write_xml_param(
+                            xmlstring += fifa_main.write_xml_param(
                                 entry[0], 0, getattr(ob.actionrender_props, entry[0]))
                             val = getattr(ob.actionrender_props, entry[0])
                             if val == 'lynxVbeam.fx':
@@ -368,13 +368,13 @@ class lights_export(bpy.types.Operator):
 
                             for subprop in entry[sect]:
                                 xmlstring += indent * '\t'
-                                xmlstring += fifa_func.write_xml_param(
+                                xmlstring += fifa_main.write_xml_param(
                                     subprop, 0, getattr(ob.actionrender_props, subprop))
                         else:
                             try:
                                 for subprop in entry[1]:
                                     xmlstring += indent * '\t'
-                                    xmlstring += fifa_func.write_xml_param(
+                                    xmlstring += fifa_main.write_xml_param(
                                         subprop, 0, getattr(ob.actionrender_props, subprop))
                             except:
                                 print(
@@ -404,24 +404,25 @@ class lights_export(bpy.types.Operator):
 
         print('WRITING RX3 FILE')
 
-        offset_list, textures_list = fifa_func.read_converted_textures(
+        offset_list, textures_list = fifa_main.read_converted_textures(
             offset_list, textures_list, 'fifa_tools\\light_textures\\')
 
         # Calling Writing to file Functions
-        f = open(scn.export_path + 'glares_' + str(scn.file_id) +
-                 '_' + scn.stadium_time + '.rx3', 'wb')
+        f = fifa_main.fifa_rx3(scn.export_path + 'glares_' + str(scn.file_id) +
+                 '_' + scn.stadium_time + '.rx3', True)
+        #f = open(scn.export_path + 'glares_' + str(scn.file_id) +
+        #         '_' + scn.stadium_time + '.rx3', 'wb')
 
-        fifa_func.write_offsets_to_file(f, offset_list)
-        fifa_func.write_offset_data_to_file(
-            f, 'fifa_tools\\light_textures\\', offset_list, [], [], [], textures_list, [], [], [])
+        f.write_offsets_to_file()
+        f.write_offset_data_to_file('fifa_tools\\light_textures\\')
 
         # Signature
-        f.seek(offset_list[-1][1])
-        f.seek(offset_list[-1][2], 1)
+        f.data.seek(offset_list[-1][1])
+        f.data.seek(offset_list[-1][2], 1)
         s = bytes(sig, 'utf-8')
-        f.write(s)
+        f.data.write(s)
 
-        f.close()
+        f.data.close()
 
         print(offset_list)
 
@@ -477,7 +478,7 @@ class file_import(bpy.types.Operator):
             if f.type == 'stadium_texture':
                 continue
 
-            if scn.create_materials_flag == True:
+            if scn.create_materials_flag is True:
                 if not f.type.split(sep='_')[0] + '_' + str(f.id) in bpy.data.materials:
                     # Create Material
                     new_mat = bpy.data.materials.new(
@@ -561,7 +562,7 @@ class file_import(bpy.types.Operator):
 
             print(f.group_names)
             # print(f.sub_names)
-            if scn.geometry_flag == True:
+            if scn.geometry_flag is True:
                 print('PASSING MESHES TO SCENE')
                 for i in range(f.mesh_count):
                     sub_name = f.type + '_' + str(f.id) + '_' + str(i)
@@ -612,7 +613,7 @@ class file_import(bpy.types.Operator):
             # print(len(f.materials))
             # print(f.group_names)
             # STADIUM MATERIAL IMPORTING
-            if scn.materials_flag == True:
+            if scn.materials_flag is True:
                 for index in range(len(f.materials)):
                     new_mat = bpy.data.materials.new(f.materials[index][0])
                     new_mat.use_shadeless = True
@@ -667,7 +668,7 @@ class file_import(bpy.types.Operator):
                         f.type + '_' + str(f.id) + '_' + str(i)].name = str(i) + '_' + f.sub_names[i]
 
             # BONE IMPORTING SECTION
-            if scn.bones_flag == True and len(f.bones) > 0:
+            if scn.bones_flag is True and len(f.bones) > 0:
                 for arm_id in range(len(f.bones)):
                     amt = bpy.data.armatures.new(
                         'armature_' + str(f.id) + '_' + str(arm_id))
@@ -685,7 +686,7 @@ class file_import(bpy.types.Operator):
                     ob.rotation_euler[1] = 1.5707972049713135
 
             # PROPS IMPORTING SECTION
-            if scn.props_flag == True:
+            if scn.props_flag is True:
                 print('FOUND PROPS: ', len(f.props))
                 print('POSITIONS FOUND: ', len(f.prop_positions))
 
@@ -708,7 +709,7 @@ class file_import(bpy.types.Operator):
             objectcount = 0
 
             # IMPORT COLLISIONS
-            if scn.collision_flag == True:
+            if scn.collision_flag is True:
                 collisioncount = 0
                 for collision in f.collisions:
                     obname = fifa_main.createmesh(collision[1], collision[2], [], collision[
@@ -744,11 +745,18 @@ class file_import(bpy.types.Operator):
             crowd_faces = []
             crowd_col = []
             crowd_types = []
+
             core_home = []
             casual_home = []
             away = []
             neutral = []
             empty = []
+            crowd_1 = []
+            crowd_2 = []
+            crowd_3 = []
+            crowd_4 = []
+            crowd_5 = []
+            crowd_6 = []
 
             # POPULATE COLOR DICTIONARY
             count = 0
@@ -788,7 +796,7 @@ class file_import(bpy.types.Operator):
                 crowd_verts.append((v4[0], v4[1], v4[2]))
                 crowd_faces.append((count, count + 1, count + 2, count + 3))
 
-                crowd_col.append(f.crowd[i][4])
+                crowd_col.append(f.crowd[i][3])
                 crowd_types.append(
                     (f.crowd[i][2], f.crowd[i][3], (count, count + 1, count + 2, count + 3)))
                 count += 4
@@ -802,31 +810,47 @@ class file_import(bpy.types.Operator):
             # Getting Crowd Types
             if scn.game_enum == "2":  # FIFA 15
                 for i in crowd_types:
-                    if i[1] >= 250:
-                        away.append(i[2][0])
-                        away.append(i[2][1])
-                        away.append(i[2][2])
-                        away.append(i[2][3])
-                    elif i[0] <= 10:
-                        core_home.append(i[2][0])
-                        core_home.append(i[2][1])
-                        core_home.append(i[2][2])
-                        core_home.append(i[2][3])
-                    elif 10 <= i[0] <= 130:
-                        casual_home.append(i[2][0])
-                        casual_home.append(i[2][1])
-                        casual_home.append(i[2][2])
-                        casual_home.append(i[2][3])
-                    elif 131 <= i[0] <= 180:
-                        neutral.append(i[2][0])
-                        neutral.append(i[2][1])
-                        neutral.append(i[2][2])
-                        neutral.append(i[2][3])
-                    elif i[0] >= 181:
-                        empty.append(i[2][0])
-                        empty.append(i[2][1])
-                        empty.append(i[2][2])
-                        empty.append(i[2][3])
+                    # print(i)
+                    if i[0][0] == 0:
+                        crowd_1.append(i[2][0])
+                        crowd_1.append(i[2][1])
+                        crowd_1.append(i[2][2])
+                        crowd_1.append(i[2][3])
+                    elif i[0][0] == 128:
+                        if i[0][1] == 128:
+                            if i[0][2] == 1:
+                                crowd_2.append(i[2][0])
+                                crowd_2.append(i[2][1])
+                                crowd_2.append(i[2][2])
+                                crowd_2.append(i[2][3])
+                            elif i[0][3] == 2:
+                                crowd_3.append(i[2][0])
+                                crowd_3.append(i[2][1])
+                                crowd_3.append(i[2][2])
+                                crowd_3.append(i[2][3])
+                            else:
+                                print('New crowd group type')
+                        elif i[0][1] == 255:
+                            if i[0][2] == 1:
+                                crowd_4.append(i[2][0])
+                                crowd_4.append(i[2][1])
+                                crowd_4.append(i[2][2])
+                                crowd_4.append(i[2][3])
+                            elif i[0][3] == 2:
+                                crowd_5.append(i[2][0])
+                                crowd_5.append(i[2][1])
+                                crowd_5.append(i[2][2])
+                                crowd_5.append(i[2][3])
+                            else:
+                                print('New crowd group type')
+                    elif i[0][0] == 255:
+                        crowd_6.append(i[2][0])
+                        crowd_6.append(i[2][1])
+                        crowd_6.append(i[2][2])
+                        crowd_6.append(i[2][3])
+                    else:
+                        print('New crowd group type')
+
             else:  # FIFA 13/14
                 for i in crowd_types:
                     if i[1] >= 250:
@@ -856,22 +880,25 @@ class file_import(bpy.types.Operator):
                         away.append(i[2][3])
 
             # Create and populate vertex groups
-            bpy.data.objects[crowd_name].vertex_groups.new('Core Home')
-            bpy.data.objects[crowd_name].vertex_groups.new('Casual Home')
-            bpy.data.objects[crowd_name].vertex_groups.new('Neutral')
-            bpy.data.objects[crowd_name].vertex_groups.new('Away')
-            bpy.data.objects[crowd_name].vertex_groups.new('Empty')
+            bpy.data.objects[crowd_name].vertex_groups.new('0_0_1')
+            bpy.data.objects[crowd_name].vertex_groups.new('128_128_1')
+            bpy.data.objects[crowd_name].vertex_groups.new('128_128_2')
+            bpy.data.objects[crowd_name].vertex_groups.new('128_255_1')
+            bpy.data.objects[crowd_name].vertex_groups.new('128_255_2')
+            bpy.data.objects[crowd_name].vertex_groups.new('255_255_1')
 
             bpy.data.objects[crowd_name].vertex_groups[
-                'Core Home'].add(core_home, 1, 'ADD')
+                '0_0_1'].add(crowd_1, 1, 'ADD')
             bpy.data.objects[crowd_name].vertex_groups[
-                'Casual Home'].add(casual_home, 1, 'ADD')
+                '128_128_1'].add(crowd_2, 1, 'ADD')
             bpy.data.objects[crowd_name].vertex_groups[
-                'Neutral'].add(neutral, 1, 'ADD')
+                '128_128_2'].add(crowd_3, 1, 'ADD')
             bpy.data.objects[crowd_name].vertex_groups[
-                'Empty'].add(empty, 1, 'ADD')
+                '128_255_1'].add(crowd_4, 1, 'ADD')
             bpy.data.objects[crowd_name].vertex_groups[
-                'Away'].add(away, 1, 'ADD')
+                '128_255_2'].add(crowd_5, 1, 'ADD')
+            bpy.data.objects[crowd_name].vertex_groups[
+                '255_255_1'].add(crowd_6, 1, 'ADD')
 
             bpy.data.objects[crowd_name].scale = Vector((0.001, 0.001, 0.001))
             bpy.data.objects[crowd_name].rotation_euler[0] = radians(90)
@@ -1400,7 +1427,7 @@ class crowd_export(bpy.types.Operator):
 
         f = open(scn.export_path + 'crowd_' + str(scn.file_id) +
                  '_' + scn.stadium_version + '.dat', 'wb')
-        fifa_func.write_crowd_file(f, ob)
+        fifa_main.write_crowd_file(f, ob)
         f.close()
         self.report({'INFO'}, 'Crowd Exported')
         return {'FINISHED'}
