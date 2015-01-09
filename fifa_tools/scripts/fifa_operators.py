@@ -823,33 +823,33 @@ class file_import(bpy.types.Operator):
                                 crowd_2.append(i[2][1])
                                 crowd_2.append(i[2][2])
                                 crowd_2.append(i[2][3])
-                            elif i[0][3] == 2:
+                            elif i[0][2] == 2:
                                 crowd_3.append(i[2][0])
                                 crowd_3.append(i[2][1])
                                 crowd_3.append(i[2][2])
                                 crowd_3.append(i[2][3])
                             else:
-                                print('New crowd group type')
+                                print('New crowd group type third byte',  i[0][2])
                         elif i[0][1] == 255:
                             if i[0][2] == 1:
                                 crowd_4.append(i[2][0])
                                 crowd_4.append(i[2][1])
                                 crowd_4.append(i[2][2])
                                 crowd_4.append(i[2][3])
-                            elif i[0][3] == 2:
+                            elif i[0][2] == 2:
                                 crowd_5.append(i[2][0])
                                 crowd_5.append(i[2][1])
                                 crowd_5.append(i[2][2])
                                 crowd_5.append(i[2][3])
                             else:
-                                print('New crowd group type')
+                                print('New crowd group type third byte',  i[0][2])
                     elif i[0][0] == 255:
                         crowd_6.append(i[2][0])
                         crowd_6.append(i[2][1])
                         crowd_6.append(i[2][2])
                         crowd_6.append(i[2][3])
                     else:
-                        print('New crowd group type')
+                        print('New crowd group type first byte', i[0][0])
 
             else:  # FIFA 13/14
                 for i in crowd_types:
