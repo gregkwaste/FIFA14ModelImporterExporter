@@ -118,10 +118,7 @@ standard_materials = ['adboard', 'adboarddigital', 'adboarddigitalglow', 'adboar
                       'simpleglow', 'sky', 'snowpile', 'tournament']
 
 
-
 # OPERATORS
-
-
 class align_crowd_faces(bpy.types.Operator):
     bl_idname = "mesh.align_crowd_seats"
     bl_label = "Set"
@@ -181,8 +178,7 @@ class assign_crowd_type(bpy.types.Operator):
 
     def invoke(self, context, event):
         scn = bpy.context.scene
-        fifa_main.crowd_groups(scn.crowd_type_enum)
-
+        fifa_main.crowd_groups(scn.crowd_type_enum + scn.crowd_fullness_enum)
         return{'FINISHED'}
 
 

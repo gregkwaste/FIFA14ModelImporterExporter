@@ -63,6 +63,7 @@ class CrowdSection(bpy.types.Panel):
         else:
             row = layout.row()
             row.prop(scn, 'crowd_type_enum')
+            row.prop(scn, 'crowd_fullness_enum')
             row.operator("mesh.assign_crowd_type", icon='PLUS')
 
             row = layout.row()
@@ -724,14 +725,22 @@ bpy.types.Scene.autopaint_modes = bpy.props.EnumProperty(
 
 
 bpy.types.Scene.crowd_type_enum = bpy.props.EnumProperty(
-    items=[('hardcoreHome_halfFull_1', 'hardcoreHome', 'hardcoreHome'),
-           ('metalcoreHome_halfFull_1', 'metalcoreHome', 'metalcoreHome'),
-           ('heavyHome_halfFull_1', 'heavyHome', 'heavyHome'),
-           ('popHome_halfFull_1', 'popHome', 'popHome'),
-           ('folkHome_halfFull_1', 'folkHome', 'folkHome'),
-           ('chickenAway_halfFull_1', 'chickenAway', 'chickenAway'),
-           ('deadAway_halfFull_1', 'deadAway', 'deadAway')],
+    items=[('hardcoreHome_', 'hardcoreHome', 'hardcoreHome'),
+           ('metalcoreHome_', 'metalcoreHome', 'metalcoreHome'),
+           ('heavyHome_', 'heavyHome', 'heavyHome'),
+           ('popHome_', 'popHome', 'popHome'),
+           ('folkHome_', 'folkHome', 'folkHome'),
+           ('chickenAway_', 'chickenAway', 'chickenAway'),
+           ('deadAway_', 'deadAway', 'deadAway')],
     name='Crowd Type')
+
+bpy.types.Scene.crowd_fullness_enum = bpy.props.EnumProperty(
+    items=[('full_1', 'Full', 'Full'),
+           ('almostFull_1', 'Almost Full', 'Almost Full'),
+           ('halfFull_1', 'Half Full', 'Half Full'),
+           ('almostEmpty_1', 'Almost Empty', 'Almost Empty'),
+           ('empty_1', 'Empty', 'Empty')],
+    name='Crowd Fullness')
 
 bpy.types.Scene.game_enum = bpy.props.EnumProperty(
     items=[('0', 'FIFA 14', 'FIFA 14'),
