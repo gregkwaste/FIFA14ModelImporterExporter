@@ -1721,7 +1721,7 @@ def write_crowd_file(f,object):
     rot_x_mat=Matrix.Rotation(radians(-90),4,'X')
     scale_mat=Matrix.Scale(1000,4)
     
-    f.write(struct.pack('<IHI',1146573379,259,len(bm.faces))) #header
+    f.write(struct.pack('<IHI',1146573379,261,len(bm.faces))) #header
     
     for face in bm.faces:
         loc=face.calc_center_median()
