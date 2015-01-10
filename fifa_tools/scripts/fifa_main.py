@@ -1361,9 +1361,17 @@ def crowd_groups(name):
             vxlist.append(v.index)
     bm.free()
     bpy.ops.object.editmode_toggle()
-     
-    if not name in ob.vertex_groups:
-        ob.vertex_groups.new(name)
+    
+
+    
+    flag = False
+    while not flag:
+        if name in ob.vertex_groups:
+            name = name[:-1] + str(int(name[-1]) + 1)
+        else:
+            ob.vertex_groups.new(name)
+            flag = True
+
     
     for g in ob.vertex_groups:
         if g.name==name:
