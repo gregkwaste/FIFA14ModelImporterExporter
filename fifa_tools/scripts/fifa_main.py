@@ -1442,12 +1442,12 @@ def convert_mesh_init(object,mode):
         return collist,boundbox,mesh_descr,mesh_descr_short,off-last  
     
     elif mode==1:
-        #uvs_0=[]
-        #uvs_1=[]
-        #uvs_2=[]
-        #col_0=[]
-        #col_1=[]
-        #col_2=[]
+        uvs_0=[]
+        uvs_1=[]
+        uvs_2=[]
+        col_0=[]
+        col_1=[]
+        col_2=[]
         id=0
         
         #Matrices
@@ -1783,7 +1783,7 @@ def write_crowd_file(f,object):
             gTier = 1
 
 
-        f.write(struct.pack('<4B', *(crowdGroup.typeDict[gType] + [gTier, crowdGroup.fullNessDict[gFullness]])))
+        f.write(struct.pack('<4B', *(list(crowdGroup.typeDict[gType]) + [gTier, crowdGroup.fullNessDict[gFullness]])))
 
         #f.write(struct.pack('<4f',1,1,0,1)) #Some Values Fifa 14
         f.write(struct.pack('<9B', 0, 0, 0, 0, 0, 0, 0, 0, 0)) # Some Values
