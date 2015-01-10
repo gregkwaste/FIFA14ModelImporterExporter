@@ -28,7 +28,7 @@ fifa_func = imp.load_source('fifa_func', prePath + fifa_func_path)
 # fifa_func=imp.load_compiled('fifa_func','fifa_tools\\scripts\\fifa_functions.pyc')
 from fifa_func import general_helper as gh
 from fifa_func import texture_helper as tex_gh
-from fifa_main import sig
+from fifa_main import sig, crowdGroup
 
 # INIT VARIABLES
 f = 0
@@ -116,6 +116,8 @@ standard_materials = ['adboard', 'adboarddigital', 'adboarddigitalglow', 'adboar
                       'homeprimary', 'homesecondary', 'initialshadinggroup', 'jumbotron', 'metalbare', 'metalpainted', 'pitch', 'pitchnoline', 'rubbershadow', 'sclockhalves', 'sclockminutesones',
                       'sclockminutestens', 'sclockscoreawayones', 'sclockscoreawaytens', 'sclockscorehomeones', 'sclockscorehometens', 'sclocksecondsones', 'sclocksecondstens', 'sclocktimeanalog',
                       'simpleglow', 'sky', 'snowpile', 'tournament']
+
+
 
 # OPERATORS
 
@@ -746,17 +748,16 @@ class file_import(bpy.types.Operator):
             crowd_col = []
             crowd_types = []
 
-            core_home = []
-            casual_home = []
-            away = []
-            neutral = []
-            empty = []
-            crowd_1 = []
-            crowd_2 = []
-            crowd_3 = []
-            crowd_4 = []
-            crowd_5 = []
-            crowd_6 = []
+            hardcoreHome = crowdGroup('hardcoreHome')
+            metalcoreHome = crowdGroup('metalcoreHome')
+            heavyHome = crowdGroup('heavyHome')
+            popHome = crowdGroup('popHome')
+            folkHome = crowdGroup('folkHome')
+            chickenAway = crowdGroup('chickenAway')
+            deadAway = crowdGroup('deadAway')
+
+            crowdGroupList = []
+            crowdGroupList.extend([hardcoreHome, metalcoreHome, heavyHome, popHome, folkHome, chickenAway, deadAway])
 
             # POPULATE COLOR DICTIONARY
             count = 0
@@ -811,94 +812,36 @@ class file_import(bpy.types.Operator):
             if scn.game_enum == "2":  # FIFA 15
                 for i in crowd_types:
                     # print(i)
-                    if i[0][0] == 0:
-                        crowd_1.append(i[2][0])
-                        crowd_1.append(i[2][1])
-                        crowd_1.append(i[2][2])
-                        crowd_1.append(i[2][3])
-                    elif i[0][0] == 128:
-                        if i[0][1] == 128:
-                            if i[0][2] == 1:
-                                crowd_2.append(i[2][0])
-                                crowd_2.append(i[2][1])
-                                crowd_2.append(i[2][2])
-                                crowd_2.append(i[2][3])
-                            elif i[0][2] == 2:
-                                crowd_3.append(i[2][0])
-                                crowd_3.append(i[2][1])
-                                crowd_3.append(i[2][2])
-                                crowd_3.append(i[2][3])
-                            else:
-                                print('New crowd group type third byte',  i[0][2])
+                    if i[0][0] == 0:  # Core Fans
+                        if i[0][1] == 0:
+                            hardcoreHome.addToGroup(i[0][3], i[2])  # HardCore Fans
+                        elif i[0][1] == 128:
+                            metalcoreHome.addToGroup(i[0][3], i[2])  # MetalCore Fans
+                        else:
+                            print('New Core 2nd Byte: ', i[0][1])
+
+                    elif 1 <= i[0][0] <= 128:  # Casual Fans
+                        if i[0][1] == 0:
+                            heavyHome.addToGroup(i[0][3], i[2])  # Heavy Fans
+                        elif i[0][1] == 128:
+                            popHome.addToGroup(i[0][3], i[2])  # Pop Fans
                         elif i[0][1] == 255:
-                            if i[0][2] == 1:
-                                crowd_4.append(i[2][0])
-                                crowd_4.append(i[2][1])
-                                crowd_4.append(i[2][2])
-                                crowd_4.append(i[2][3])
-                            elif i[0][2] == 2:
-                                crowd_5.append(i[2][0])
-                                crowd_5.append(i[2][1])
-                                crowd_5.append(i[2][2])
-                                crowd_5.append(i[2][3])
-                            else:
-                                print('New crowd group type third byte',  i[0][2])
-                    elif i[0][0] == 255:
-                        crowd_6.append(i[2][0])
-                        crowd_6.append(i[2][1])
-                        crowd_6.append(i[2][2])
-                        crowd_6.append(i[2][3])
+                            folkHome.addToGroup(i[0][3], i[2])  # Folk Fans
+                        else:
+                            print('New MediCore 2nd Byte: ', i[0][1])
+
+                    elif 129 <= i[0][0] <= 255:
+                        if i[0][1] == 128:
+                            chickenAway.addToGroup(i[0][3], i[2])  # Chicken Fans
+                        elif i[0][1] == 255:
+                            deadAway.addToGroup(i[0][3], i[2])  # Already dead Fans
+                        else:
+                            print('New Away 2nd Byte: ', i[0][1])
                     else:
                         print('New crowd group type first byte', i[0][0])
 
-            else:  # FIFA 13/14
-                for i in crowd_types:
-                    if i[1] >= 250:
-                        empty.append(i[2][0])
-                        empty.append(i[2][1])
-                        empty.append(i[2][2])
-                        empty.append(i[2][3])
-                    elif i[0] <= 10:
-                        core_home.append(i[2][0])
-                        core_home.append(i[2][1])
-                        core_home.append(i[2][2])
-                        core_home.append(i[2][3])
-                    elif 10 <= i[0] <= 130:
-                        casual_home.append(i[2][0])
-                        casual_home.append(i[2][1])
-                        casual_home.append(i[2][2])
-                        casual_home.append(i[2][3])
-                    elif 131 <= i[0] <= 180:
-                        neutral.append(i[2][0])
-                        neutral.append(i[2][1])
-                        neutral.append(i[2][2])
-                        neutral.append(i[2][3])
-                    elif i[0] >= 181:
-                        away.append(i[2][0])
-                        away.append(i[2][1])
-                        away.append(i[2][2])
-                        away.append(i[2][3])
-
-            # Create and populate vertex groups
-            bpy.data.objects[crowd_name].vertex_groups.new('0_0_1')
-            bpy.data.objects[crowd_name].vertex_groups.new('128_128_1')
-            bpy.data.objects[crowd_name].vertex_groups.new('128_128_2')
-            bpy.data.objects[crowd_name].vertex_groups.new('128_255_1')
-            bpy.data.objects[crowd_name].vertex_groups.new('128_255_2')
-            bpy.data.objects[crowd_name].vertex_groups.new('255_255_1')
-
-            bpy.data.objects[crowd_name].vertex_groups[
-                '0_0_1'].add(crowd_1, 1, 'ADD')
-            bpy.data.objects[crowd_name].vertex_groups[
-                '128_128_1'].add(crowd_2, 1, 'ADD')
-            bpy.data.objects[crowd_name].vertex_groups[
-                '128_128_2'].add(crowd_3, 1, 'ADD')
-            bpy.data.objects[crowd_name].vertex_groups[
-                '128_255_1'].add(crowd_4, 1, 'ADD')
-            bpy.data.objects[crowd_name].vertex_groups[
-                '128_255_2'].add(crowd_5, 1, 'ADD')
-            bpy.data.objects[crowd_name].vertex_groups[
-                '255_255_1'].add(crowd_6, 1, 'ADD')
+            for group in crowdGroupList:
+                group.passGroupsToObject(bpy.data.objects[crowd_name])
 
             bpy.data.objects[crowd_name].scale = Vector((0.001, 0.001, 0.001))
             bpy.data.objects[crowd_name].rotation_euler[0] = radians(90)

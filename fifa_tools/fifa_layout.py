@@ -724,11 +724,13 @@ bpy.types.Scene.autopaint_modes = bpy.props.EnumProperty(
 
 
 bpy.types.Scene.crowd_type_enum = bpy.props.EnumProperty(
-    items=[('Core Home', 'Core Home', 'Core Home'),
-           ('Casual Home', 'Casual Home', 'Casual Home'),
-           ('Neutral', 'Neutral', 'Neutral'),
-           ('Away', 'Away', 'Away'),
-           ('Empty', 'Empty', 'Empty')],
+    items=[('hardcoreHome_halfFull_1', 'hardcoreHome', 'hardcoreHome'),
+           ('metalcoreHome_halfFull_1', 'metalcoreHome', 'metalcoreHome'),
+           ('heavyHome_halfFull_1', 'heavyHome', 'heavyHome'),
+           ('popHome_halfFull_1', 'popHome', 'popHome'),
+           ('folkHome_halfFull_1', 'folkHome', 'folkHome'),
+           ('chickenAway_halfFull_1', 'chickenAway', 'chickenAway'),
+           ('deadAway_halfFull_1', 'deadAway', 'deadAway')],
     name='Crowd Type')
 
 bpy.types.Scene.game_enum = bpy.props.EnumProperty(
