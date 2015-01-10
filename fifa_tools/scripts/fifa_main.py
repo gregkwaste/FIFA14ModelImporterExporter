@@ -1776,13 +1776,13 @@ def write_crowd_file(f,object):
         try:
             gType = gnameParts[0]
             gFullness = gnameParts[1]
-            gTier = gnameParts[2]
+            gTier = int(gnameParts[2])
         except:
             gType = 'deadAway'
             gFullness = 'empty'
             gTier = 1
 
-
+        #print(list(crowdGroup.typeDict[gType])  +  [gTier, crowdGroup.fullNessDict[gFullness]])
         f.write(struct.pack('<4B', *(list(crowdGroup.typeDict[gType]) + [gTier, crowdGroup.fullNessDict[gFullness]])))
 
         #f.write(struct.pack('<4f',1,1,0,1)) #Some Values Fifa 14
