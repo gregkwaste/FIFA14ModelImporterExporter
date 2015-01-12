@@ -41,11 +41,11 @@ class crowdGroup:
                     'almostEmpty': 10, 
                     'empty': 0}
     typeDict = {'hardcoreHome': (0, 0), 
-                'metalcoreHome': (0, 128), 
-                'heavyHome': (128, 0), 
+                'metalcoreHome': (128, 0), 
+                'heavyHome': (0, 128), 
                 'popHome': (128, 128), 
-                'folkHome': (128, 255), 
-                'chickenAway': (255, 128), 
+                'folkHome': (255, 255), 
+                'chickenAway': (128, 255), 
                 'deadAway': (255, 255)}
 
     def __init__(self, name):
