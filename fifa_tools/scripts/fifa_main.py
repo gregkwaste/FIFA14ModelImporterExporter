@@ -35,17 +35,17 @@ comp=half.Float16Compressor()
 
 #Classes
 class crowdGroup:
-    fullNessDict = {'full': 255, 
-                    'almostFull': 75, 
-                    'halfFull': 25, 
-                    'almostEmpty': 10, 
+    fullNessDict = {'full': 255,
+                    'almostFull': 75,
+                    'halfFull': 25,
+                    'almostEmpty': 10,
                     'empty': 0}
-    typeDict = {'hardcoreHome': (0, 0), 
-                'metalcoreHome': (128, 0), 
-                'heavyHome': (0, 128), 
-                'popHome': (128, 128), 
-                'folkHome': (255, 255), 
-                'chickenAway': (128, 255), 
+    typeDict = {'hardcoreHome': (0, 0),
+                'metalcoreHome': (128, 0),
+                'heavyHome': (0, 128),
+                'popHome': (128, 128),
+                'folkHome': (255, 255),
+                'chickenAway': (128, 255),
                 'deadAway': (255, 255)}
 
     def __init__(self, name):
