@@ -93,11 +93,11 @@ class texture_helper:
                     # if not texture_name in texture_dict:
                     textures_list.append(
                         [texture_name, texture_path, texture_alpha, 0, 0, 0, 0, '', texture_maxsize])
-                        # store texture_information indexed in the dictionary
+                    # store texture_information indexed in the dictionary
                     texture_dict[texture_name] = len(textures_list)
                 except:
                     # Found Empty Texture Slot
-                    #print('Empty Texture Slot')
+                    # print('Empty Texture Slot')
                     pass
 
         except:

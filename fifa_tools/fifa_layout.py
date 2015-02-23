@@ -182,8 +182,8 @@ class lights_panel(bpy.types.Panel):
                     # row.alignment='EXPAND'
                     row.label(text=attr)
                     split = row.split()
-                    split.alignment = 'CENTER'
-                    # split.scale_x=1
+                    #split.alignment = 'CENTER'
+                    split.scale_x = 1
                     split.prop(ob.emitbox_props, attr, text='')
 
             box = layout.box()
@@ -484,7 +484,7 @@ class FifaImporter(bpy.types.Panel):
     bl_region_type = 'WINDOW'
     bl_context = "scene"
 
-###MAIN PANEL INTERFACE###
+    ###MAIN PANEL INTERFACE###
     def draw(self, context):
         scn = context.scene
 
@@ -867,7 +867,11 @@ class emitbox_propertygroup(bpy.types.PropertyGroup):
     fSizeMean = FloatProperty(name='fSizeMean', min=0, max=5000, precision=1)
     fSizeSpread = FloatProperty(
         name='fSizeSpread', min=0, max=1000, precision=1)
+    fVelocityAdoption = FloatProperty(
+        name='fVelocityAdoption', min=0, max=100, precision=1)
     iEmitRate = IntProperty(name='fSizeSpread', min=0, max=10000, step=1)
+    vVelocitySpread = FloatVectorProperty(
+        name='vVelocitySpread', default=(0.3, 0.3, 0.3), size=3, max=1.0, min=0, precision=2)
     bInject = BoolProperty(name='bInject', default=True)
 
 

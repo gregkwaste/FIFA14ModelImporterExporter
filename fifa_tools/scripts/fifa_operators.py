@@ -65,11 +65,15 @@ light_props = [['sShader', ['fGlareSensitivityCenter', 'fGlareSensitivityEdge', 
                'bUseLighting',
                'bUseGlareSeed',
                'vPivotShift',
+               # Emitbox props
                'fAngularVelocityAdoption',
                'fSizeMean',
                'fSizeSpread',
                'iEmitRate',
                'bInject',
+               'vVelocitySpread',
+               'fVelocityAdoption',
+               # General props
                'iType',
                'iDepthBuffer',
                'iAlign',
@@ -297,7 +301,7 @@ class lights_export(bpy.types.Operator):
         for ob in scn.objects:
             if ob.name[0:7] == 'LIGHTS_':
                 textures_list.append([ob.actionrender_props.sTexture.split(sep='.dds')[
-                                     0] + '.Raster', ob.actionrender_props.sTexture.split(sep='.')[0] + '.Raster.dds', False, 0, 0, 0, 0, '', 128])
+                                     0] + '.Raster', os.path.join('fifa_tools', 'light_textures') + os.path.sep + ob.actionrender_props.sTexture.split(sep='.')[0] + '.Raster.dds', False, 0, 0, 0, 0, '', 128])
 
                 xmlstring += indent * '\t'
                 xmlstring += '<particleGroup name=' + \
@@ -315,13 +319,6 @@ class lights_export(bpy.types.Operator):
                     34) + ' className=' + chr(34) + 'ParticleActionEmitBox' + chr(34) + '>\n'
                 indent += 1
 
-                for attr in class_dir(ob.emitbox_props):
-
-                    if attr in light_props:
-                        xmlstring += indent * '\t'
-                        xmlstring += fifa_main.write_xml_param(
-                            attr, 0, getattr(ob.emitbox_props, attr))
-
                 for i in range(len(ob.children)):
                     child = ob.children[i]
                     if child.type == 'LAMP':
@@ -330,6 +327,13 @@ class lights_export(bpy.types.Operator):
                         xmlstring += indent * '\t'
                         xmlstring += fifa_main.write_xml_param(
                             'vCenter', i, (round(co[0], 5), round(co[1], 5), round(co[2], 5)))
+
+                for attr in class_dir(ob.emitbox_props):
+
+                    if attr in light_props:
+                        xmlstring += indent * '\t'
+                        xmlstring += fifa_main.write_xml_param(
+                            attr, 0, getattr(ob.emitbox_props, attr))
 
                 indent -= 1
                 xmlstring += indent * '\t'
@@ -370,10 +374,20 @@ class lights_export(bpy.types.Operator):
                                     subprop, 0, getattr(ob.actionrender_props, subprop))
                         else:
                             try:
-                                for subprop in entry[1]:
-                                    xmlstring += indent * '\t'
-                                    xmlstring += fifa_main.write_xml_param(
-                                        subprop, 0, getattr(ob.actionrender_props, subprop))
+                                # writing the flag
+                                # print(entry[1][0])
+                                tempval = getattr(ob.actionrender_props, entry[0])  # store the value
+                                xmlstring += indent * '\t'
+                                xmlstring += fifa_main.write_xml_param(
+                                    entry[0], 0, tempval)
+
+                                if tempval:
+                                    indent += 1
+                                    for subprop in entry[1]:
+                                        xmlstring += indent * '\t'
+                                        xmlstring += fifa_main.write_xml_param(
+                                            subprop, 0, getattr(ob.actionrender_props, subprop))
+                                    indent -= 1
                             except:
                                 print(
                                     'Not an ActionRender Property, skipping...')
