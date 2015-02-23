@@ -844,13 +844,11 @@ bpy.types.Scene.fifa_import_loc = bpy.props.FloatVectorProperty(
     default=(0.0, 0.0, 0.0)
 )
 
-
 # development mode props
 bpy.types.Scene.batch_import_path = bpy.props.StringProperty(
     name="Batch Import Path",
     subtype='DIR_PATH'
 )
-
 
 bpy.types.Scene.batch_radius = bpy.props.IntProperty(
     name='Radius',
@@ -878,29 +876,17 @@ class emitbox_propertygroup(bpy.types.PropertyGroup):
 class actionrender_propertygroup(bpy.types.PropertyGroup):
     sShader = EnumProperty(name='sShader',
                            items=[('lynxGlare.fx', 'lynxGlare.fx', 'lynxGlare.fx'),
-                                  ('lynxVbeam.fx', 'lynxVbeam.fx',
-                                   'lynxVbeam.fx'),
+                                  ('lynxVbeam.fx', 'lynxVbeam.fx', 'lynxVbeam.fx'),
                                   ('lynx.fx', 'lynx.fx', 'lynx.fx')
                                   ]
                            )
     sTexture = EnumProperty(name='sTexture',
-                            items=[('glare_corona.dds', 'glare_corona', 'glare_corona.dds'),
-                                   ('glare_lensflare_flipped', 'glare_lensflare_flipped',
-                                    'glare_lensflare_flipped.tga'),
-                                   ('glare_atmosglow.dds',
-                                    'glare_atmosglow', 'glare_atmosglow'),
-                                   ('glare_halogen.dds', 'glare_halogen',
-                                    'glare_halogen.dds'),
-                                   ('glare_punchglow.dds', 'glare_punchglow',
-                                    'glare_punchglow.dds'),
-                                   ('glare_alphamos.dds', 'glare_alphamos',
-                                    'glare_alphamos.dds'),
-                                   ('glare_half.dds', 'glare_half',
-                                    'glare_half.dds'),
-                                   ('fx_freshbeam.dds', 'fx_freshbeam',
-                                    'fx_freshbeam.dds'),
-                                   ('fx_vbeam_gradient.dds',
-                                    'fx_vbeam_gradient', 'fx_vbeam_gradient.dds')
+                            items=[('fx_glare_corona.dds', 'glare_corona', 'fx_glare_corona.dds'),
+                                   ('fx_glare_lensflare.dds', 'glare_lensflare', 'fx_glare_lensflare.dds'),
+                                   ('fx_glare_lensfold.dds', 'glare_lensfold', 'fx_glare_lensfold.dds'),
+                                   ('fx_glare_halogen.dds', 'glare_halogen', 'fx_glare_halogen.dds'),
+                                   ('fx_vbeam_noisebeam.dds', 'vbeam_noisebeam', 'fx_vbeam_noisebeam.dds'),
+                                   ('fx_glare_whitefalloff.dds', 'glare_whitefalloff', 'fx_glare_whitefalloff.dds')
                                    ],
 
                             )
