@@ -323,10 +323,10 @@ class FifaExporter(bpy.types.Panel):
             row = box.row()
             split = row.split()
             split.scale_x = 1.5
-            split.prop(scn, 'stadium_version', text='Version')
+            split.prop(scn, 'stadium_version', text='Time')
             split = row.split()
             split.scale_x = 1.5
-            split.prop(scn, 'stadium_time', text='Time')
+            split.prop(scn, 'stadium_time', text='Weather')
             split = row.split()
             split.alignment = 'RIGHT'
             split.scale_x = 1.5
@@ -804,10 +804,10 @@ bpy.types.Scene.stadium_version = bpy.props.EnumProperty(
     name="Stadium Version")
 
 bpy.types.Scene.stadium_time = bpy.props.EnumProperty(
-    items=[('1', 'Day fine', 'Day fine'),
-           ('3', 'Night fine', 'Night fine'),
-           ('0', 'Day Rain', 'Day Rain'),
-           ('4', 'Afternoon', 'Afternoon')],
+    items=[('0', 'Fine Weather', 'Fine Weather'),
+           ('1', 'Overcast', 'Overcast'),
+           ('2', 'Rainy Weather', 'Rainy Weather'),
+           ('3', 'Snow', 'Snow')],
     name="Stadium Time")
 
 bpy.types.Scene.trophy_export_flag = bpy.props.BoolProperty(

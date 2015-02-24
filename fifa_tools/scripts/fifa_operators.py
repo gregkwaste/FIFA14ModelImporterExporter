@@ -414,8 +414,9 @@ class lights_export(bpy.types.Operator):
         xmlstring += '</particleSystem>\n'
 
         print('WRITING LNX FILE')
-        f = open(scn.export_path + 'glares_' + str(scn.file_id) +
-                 '_' + scn.stadium_time + '.lnx', 'w')
+        filename = scn.export_path + 'glares_' + str(scn.file_id) + '_' + scn.stadium_version + '_' + scn.stadium_time
+
+        f = open(filename + '.lnx', 'w')
         f.write(xmlstring)
         f.close()
 
@@ -425,10 +426,7 @@ class lights_export(bpy.types.Operator):
             offset_list, textures_list, 'fifa_tools\\light_textures\\')
 
         # Calling Writing to file Functions
-        f = fifa_main.fifa_rx3(scn.export_path + 'glares_' + str(scn.file_id) +
-                 '_' + scn.stadium_time + '.rx3', True)
-        #f = open(scn.export_path + 'glares_' + str(scn.file_id) +
-        #         '_' + scn.stadium_time + '.rx3', 'wb')
+        f = fifa_main.fifa_rx3(filename + '.rx3', True)
 
         f.write_offsets_to_file()
         f.write_offset_data_to_file('fifa_tools\\light_textures\\')
