@@ -48,19 +48,16 @@ class crowdGroup:
                     'almostEmpty': 10,
                     'empty': 0}
     typeDict = {'hardcoreHome': (0, 0),
-<<<<<<< HEAD
                 'metalcoreHome': (0, 128),
                 'heavyHome': (128, 0),
                 'popHome': (128, 128),
                 'folkHome': (128, 255),
                 'chickenAway': (255, 128),
-=======
                 'metalcoreHome': (128, 0),
                 'heavyHome': (0, 128),
                 'popHome': (128, 128),
                 'folkHome': (255, 255),
                 'chickenAway': (128, 255),
->>>>>>> branch 'new_classes' of git@bitbucket.org:gregkwaste/fifa14ie.git
                 'deadAway': (255, 255)}
 
     def __init__(self, name):
