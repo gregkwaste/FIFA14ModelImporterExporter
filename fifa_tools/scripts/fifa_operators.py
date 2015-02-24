@@ -59,7 +59,8 @@ light_props = [['sShader', ['fGlareSensitivityCenter', 'fGlareSensitivityEdge', 
                ['bUseColorRamp', ['vColorRamp', 'vColorRampTimes']],
                ['bUseSizeRamp', ['vSizeRamp', 'vSizeRampTimes']],
                ['bUseSizeMult', ['fSizeMultX', 'fSizeMultY']],
-               ['bUseColorMult', ['vColorMult', 'vColorMultSpread']],
+               ['bUseColorMult', ['vColorMult', 'vColorMultSpread', 'iColorRampMode']],
+               ['bUseZFeather', ['fZFeatherRange', 'fNearFeatherRange', 'fFarFeatherRange', 'fZFeatherFalloff', 'fZFeatherOffset']],
                'bStretchPerParticle',
                'bUseAnimTexture',
                'bUseLighting',
@@ -301,7 +302,7 @@ class lights_export(bpy.types.Operator):
         for ob in scn.objects:
             if ob.name[0:7] == 'LIGHTS_':
                 textures_list.append([ob.actionrender_props.sTexture.split(sep='.dds')[
-                                     0] + '.Raster', os.path.join('fifa_tools', 'light_textures') + os.path.sep + ob.actionrender_props.sTexture.split(sep='.')[0] + '.Raster.dds', False, 0, 0, 0, 0, '', 128])
+                                     0], os.path.join('fifa_tools', 'light_textures') + os.path.sep + ob.actionrender_props.sTexture.split(sep='.')[0] + '.Raster.dds', False, 0, 0, 0, 0, '', 128])
 
                 xmlstring += indent * '\t'
                 xmlstring += '<particleGroup name=' + \
@@ -319,6 +320,7 @@ class lights_export(bpy.types.Operator):
                     34) + ' className=' + chr(34) + 'ParticleActionEmitBox' + chr(34) + '>\n'
                 indent += 1
 
+                # vCenter entries
                 for i in range(len(ob.children)):
                     child = ob.children[i]
                     if child.type == 'LAMP':
@@ -327,6 +329,8 @@ class lights_export(bpy.types.Operator):
                         xmlstring += indent * '\t'
                         xmlstring += fifa_main.write_xml_param(
                             'vCenter', i, (round(co[0], 5), round(co[1], 5), round(co[2], 5)))
+
+                # Holding up space for vVelocityMean and vOrientationMean values
 
                 for attr in class_dir(ob.emitbox_props):
 

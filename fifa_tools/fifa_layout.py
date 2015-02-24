@@ -918,9 +918,9 @@ class actionrender_propertygroup(bpy.types.PropertyGroup):
     fGlareSensitivityPower = FloatProperty(
         name='fGlareSensitivityPower', min=0, max=100, precision=2, step=0.01)
     fGlareBloomScale = FloatProperty(
-        name='fGlareBloomScale', min=0, max=5, precision=2, step=0.01)
+        name='fGlareBloomScale', min=0, max=30, precision=2, step=0.01)
     fGlareBloomSpread = FloatProperty(
-        name='fGlareBloomSpread', min=0, max=5, precision=2, step=0.01)
+        name='fGlareBloomSpread', min=0, max=30, precision=2, step=0.01)
     fGlareBloomRate = FloatProperty(
         name='fGlareBloomRate', min=-1, max=1, precision=2, step=0.01)
     fGlareRotationRate = FloatProperty(
@@ -933,7 +933,7 @@ class actionrender_propertygroup(bpy.types.PropertyGroup):
     fFlareOffsetScale = FloatProperty(
         name='fFlareOffsetScale', min=0, max=1, precision=2, step=0.01)
     fFlareEndScale = FloatProperty(
-        name='fFlareEndScale', min=0, max=20, precision=2, step=0.01)
+        name='fFlareEndScale', min=0, max=30, precision=2, step=0.01)
 
     fVbeamAngle = FloatProperty(
         name='fVbeamAngle', min=0, max=360, precision=2, step=0.01)
@@ -949,6 +949,7 @@ class actionrender_propertygroup(bpy.types.PropertyGroup):
         1, 1, 1, 1), size=4, max=5, min=0, precision=1, step=0.1)
     vColorRampTimes = FloatVectorProperty(name='vColorRampTimes', default=(
         0, 0, 0, 1), size=4, max=5, min=0, precision=1, step=0.1)
+    iColorRampMode = IntProperty(name='iColorRampMode', min=0, max=1, step=1, default=0)
 
     bUseSizeRamp = BoolProperty(name='bUseSizeRamp', default=False)
     vSizeRamp = FloatVectorProperty(name='vSizeRamp', default=(
@@ -975,6 +976,18 @@ class actionrender_propertygroup(bpy.types.PropertyGroup):
         1, 1, 1, 1), size=4, max=5, min=0, precision=2, step=0.01)
 
     bUseGlareSeed = BoolProperty(name='bUseGlareSeed', default=True)
+
+    bUseZFeather = BoolProperty(name='bUseZFeather', default=True)
+    fZFeatherRange = FloatProperty(
+        name='fZFeatherRange', min=0, max=50000, precision=1, step=0.1, default=10000)
+    fNearFeatherRange = FloatProperty(
+        name='fNearFeatherRange', min=0, max=10000, precision=1, step=0.1, default=0)
+    fFarFeatherRange = FloatProperty(
+        name='fFarFeatherRange', min=0, max=50000, precision=1, step=0.1, default=50000)
+    fZFeatherOffset = FloatProperty(
+        name='fZFeatherOffset', min=0, max=1, precision=2, step=0.01, default=1)
+    fZFeatherFalloff = FloatProperty(
+        name='fZFeatherFalloff', min=0, max=1, precision=2, step=0.01, default=1)
 
     vPivotShift = FloatVectorProperty(
         name='vPivotShift', default=(0, 0, 0), size=3, max=5, min=0, precision=2)
