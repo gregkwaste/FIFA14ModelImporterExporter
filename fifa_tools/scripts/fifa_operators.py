@@ -64,6 +64,7 @@ light_props = [['sShader', ['fGlareSensitivityCenter', 'fGlareSensitivityEdge', 
                'bStretchPerParticle',
                'bUseAnimTexture',
                'bUseLighting',
+               'bHalfSizeRender', 
                'bUseGlareSeed',
                'vPivotShift',
                # Emitbox props
@@ -302,7 +303,7 @@ class lights_export(bpy.types.Operator):
         for ob in scn.objects:
             if ob.name[0:7] == 'LIGHTS_':
                 textures_list.append([ob.actionrender_props.sTexture.split(sep='.dds')[
-                                     0], os.path.join('fifa_tools', 'light_textures') + os.path.sep + ob.actionrender_props.sTexture.split(sep='.')[0] + '.Raster.dds', False, 0, 0, 0, 0, '', 128])
+                                     0], os.path.join('fifa_tools', 'light_textures') + os.path.sep + ob.actionrender_props.sTexture.split(sep='.')[0] + '.dds', False, 0, 0, 0, 0, '', 128])
 
                 xmlstring += indent * '\t'
                 xmlstring += '<particleGroup name=' + \

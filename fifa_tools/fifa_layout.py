@@ -965,6 +965,7 @@ class actionrender_propertygroup(bpy.types.PropertyGroup):
 
     bUseAnimTexture = BoolProperty(name='bUseAnimTexture', default=False)
     bUseLighting = BoolProperty(name='bUseLighting', default=False)
+    bHalfSizeRender = BoolProperty(name='bHalfSizeRender', default=True)
 
     bStretchPerParticle = BoolProperty(
         name='bStretchPerParticle', default=False)
