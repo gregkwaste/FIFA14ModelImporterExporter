@@ -215,9 +215,9 @@ class general_helper:
 
     @staticmethod
     def write_half_verts(f, co):
-        hvx = comp.compress(round(co[0], 8))
-        hvy = comp.compress(round(co[1], 8))
-        hvz = comp.compress(round(co[2], 8))
+        hvx = comp.compress(round(co[0], 12))
+        hvy = comp.compress(round(co[1], 12))
+        hvz = comp.compress(round(co[2], 12))
         f.write(struct.pack('<HHH', hvx, hvy, hvz))
         f.seek(2, 1)
 

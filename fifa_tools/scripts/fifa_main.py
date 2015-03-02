@@ -30,7 +30,7 @@ from subprocess import call
 # half=imp.load_source('half',halfpath)
 # half=imp.load_compiled('half','fifa_tools\\scripts\\half.pyc')
 
-sig = 'FIFA 3D Importer/Exporter, made by arti. v0.65. All rights reserved.©'
+sig = 'FIFA 3D Importer/Exporter, made by arti. v0.66. All rights reserved.©'
 
 # General gh Function Class
 from fifa_func import general_helper as gh
@@ -1102,11 +1102,11 @@ class fifa_rx3:
                         id = 2
                     self.data.write(
                         struct.pack('<IBBHHHHH', tex[6], 1, id, 1, tex[3], tex[4], 1, tex[5]))
-            elif self.offset_list[i][0] == 2047566042:
+            elif self.offset_list[i][0] == 2047566042: # TEXTURES
                 id = self.offset_list[i][3]
                 # texture writing
                 ext_len = len(
-                    self.texture_list[id][1].split(sep='\\')[-1].split(sep='.')[-1])
+                    self.texture_list[id][1].split(sep=os.sep)[-1].split(sep='.')[-1])
                 # t=open(self.texture_list[id][1].split(sep='\\')[-1][0:-1-ext_len]+'.dds','rb')
                 t = open(self.texture_list[id][1], 'rb')
 
@@ -1329,7 +1329,7 @@ def read_converted_textures(offset_list, textures_list, path):
         (1808827868, len(textures_list) * 16 + 48, len(textures_list) * 16 + 16))
 
     for k in range(len(textures_list)):
-        # print('Reading: ',textures_list[k][1])
+        print('Reading: ',textures_list[k][1])
         ext_len = len(
             textures_list[k][1].split(sep='\\')[-1].split(sep='.')[-1])
         t = open(textures_list[k][1], 'rb')

@@ -10,6 +10,7 @@ from mathutils import Vector, Euler, Matrix
 from math import radians
 from shutil import copyfile
 from xml.dom import minidom
+from time import gmtime, strftime
 
 linux_path = '/media/2tb/Blender/blender-2.71-windows64'
 
@@ -275,6 +276,7 @@ class lights_export(bpy.types.Operator):
     bl_label = 'EXPORT LIGHTS'
 
     def invoke(self, context, event):
+        print('Light Export Started: ' + strftime("%Y-%m-%d %H:%M:%S", gmtime())) #  Report current time
         object = context.object
         scn = context.scene
 
@@ -294,7 +296,7 @@ class lights_export(bpy.types.Operator):
 
         xmlstring += '<particleEffect name=' + \
             chr(34) + 'glares_' + str(scn.file_id) + \
-            '_' + scn.stadium_time + chr(34) + '>\n'
+            '_' + scn.stadium_version + chr(34) + '>\n'
         indent += 1
         xmlstring += indent * '\t'
 
@@ -422,11 +424,11 @@ class lights_export(bpy.types.Operator):
 
         print('WRITING RX3 FILE')
 
-        offset_list, textures_list = fifa_main.read_converted_textures(
-            offset_list, textures_list, 'fifa_tools\\light_textures\\')
-
         # Calling Writing to file Functions
         f = fifa_main.fifa_rx3(filename + '.rx3', True)
+
+        f.offset_list, f.texture_list = fifa_main.read_converted_textures(
+            offset_list, textures_list, 'fifa_tools\\light_textures\\')
 
         f.write_offsets_to_file()
         f.write_offset_data_to_file('fifa_tools\\light_textures\\')
@@ -1358,6 +1360,7 @@ class test_file_export(bpy.types.Operator):
         f.data.write(s)
 
         f.data.close()
+        self.report({'INFO'}, 'Model exported Successfully')
         return {'FINISHED'}
 
 

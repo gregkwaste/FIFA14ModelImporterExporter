@@ -2,7 +2,7 @@ bl_info = {
     "name": "FIFA 15 3D IMPORTER/EXPORTER",
     "description": "RX3 Importer/Exporter",
     "author": "arti-10",
-    "version": (0, 65, 'beta'),
+    "version": (0, 66, 'beta'),
     "blender": (2, 71, 0),
     "location": "View3D > Scene",
     "warning": "",  # used for warning icon and text in addons panel
@@ -10,7 +10,7 @@ bl_info = {
     "tracker_url": "",
     "category": "Import-Export"}
 
-version = (0, 65)
+version = (0, 66)
 import bpy
 import imp
 import os
@@ -35,7 +35,7 @@ from fifa_operators import light_props as light_props
 version_text = 'v' + str(version[0]) + '.' + \
     str(version[1]) + ', made by arti-10'
 game_version = " 15 "
-dev_status = 1
+dev_status = 0
 
 ###VERTEX GROUP PANEL###
 
