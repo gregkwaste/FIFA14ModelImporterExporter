@@ -535,19 +535,12 @@ class general_helper:
         # x:    normal Vector
         # axis: desired axis
 
-        # if angle <= 0:
-
-        if -1 <= x < 0:
-            return -0.502 * x
-        elif x >= 0:
-            return 0.498 * x
-        # else:
-        #     if x == -1:
-        #         return 0.502
-        #     elif -1 < x < 0:
-        #         return 0.498 * x + 1
-        #     elif 1 >= x >= 0:
-        #         return -0.502 * x + 1
+        if -1 < x < 0:
+            return 0.498*x + 1
+        elif 0 <= x <= 1:
+            return 0.498*x
+        else:
+            return 0.502
 
     @staticmethod
     def crowd_col(ob, col, name):
@@ -566,3 +559,5 @@ class general_helper:
 
         bm.to_mesh(me)
         bm.free()
+
+
