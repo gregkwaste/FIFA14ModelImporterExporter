@@ -1448,7 +1448,7 @@ class file_overwrite(bpy.types.Operator):
 
         # FACE EDITING MODE
         if scn.face_edit_flag:
-            print('FACE EDITING MODE PROCEDURE \n')
+            print('FACE EDITING MODE PROCEDURES \n')
             parts = []
             status = 0
             if scn.face_edit_head_flag and scn.model_import_path:
@@ -1465,16 +1465,16 @@ class file_overwrite(bpy.types.Operator):
                 parts.append(scn.hair_import_path)
             progress = 0
             for path in parts:
-                name = path.split(sep='\\')[-1]
+                name = path.split(sep=os.sep)[-1]
                 try:
                     t = fifa_main.fifa_rx3(path, 0)
                     # copy file to export directory
-                    copyfile(t.data.raw.name, scn.export_path + '\\' + name)
+                    copyfile(t.data.raw.name, scn.export_path + os.sep + name)
                 except FileNotFoundError:
                     self.report({'ERROR'}, 'File Not Found')
                     return {'CANCELLED'}
                 # open copied file
-                e = fifa_main.fifa_rx3(scn.export_path + '\\' + name, 0)
+                e = fifa_main.fifa_rx3(scn.export_path + os.sep + name, 0)
                 # check return codes
                 if e == 'io_error':
                     self.report({'ERROR'}, 'File Error')
@@ -1588,7 +1588,7 @@ class clear_temp_directory(bpy.types.Operator):
         for f in files:
             if f.endswith('.dds') or f.endswith('.decompressed'):
                 count += 1
-                os.remove('fifa_tools\\' + f)
+                os.remove('fifa_tools' + os.sep + f)
                 print('Deleting ' + f)
 
         self.report({'INFO'}, str(count) + ' Textures Removed')

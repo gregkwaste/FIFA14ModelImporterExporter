@@ -291,7 +291,7 @@ class general_helper:
     @staticmethod
     def mat3_to_vec_roll(mat):
         vec = mat.col[1]
-        vecmat = self.vec_roll_to_mat3(mat.col[1], 0)
+        vecmat = general_helper.vec_roll_to_mat3(mat.col[1], 0)
         vecmatinv = vecmat.inverted()
         rollmat = vecmatinv * mat
         roll = atan2(rollmat[0][2], rollmat[2][2])

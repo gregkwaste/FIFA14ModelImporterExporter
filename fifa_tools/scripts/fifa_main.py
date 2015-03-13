@@ -400,7 +400,7 @@ class fifa_rx3:
         bm.free()
         return verts, uvs, cols, indices
 
-    def convert_mesh_to_bytes(self, opts, count, verts, uvs, cols, normals):
+    def convert_mesh_to_bytes(self, opts, count, verts, uvs, cols):
         for i in range(count):
             for o in opts:
                 if o[0] == 'p':  # verts
@@ -410,16 +410,9 @@ class fifa_rx3:
                         self.data.write(struct.pack(
                             '<3f', round(verts[i][0], 8), round(verts[i][1], 8), round(verts[i][2], 8)))
                 elif o[0] == 'n':  # col0
-                    # print(normals[i],cols[0][i])
                     col = (
                         int(cols[0][i][0]) << 20) + (int(cols[0][i][1]) << 10) + (int(cols[0][i][2]))
-                    #veclen = sqrt(sum(normals[i][j]**2 for j in range(3)))
-                    #for j in range(3): print(0.5 + 0.5*(normals[i][j]/veclen)),
-                    # print('---')
-                    #col=int(0.5 + 0.5*(normals[i][0]/veclen))*1023<<20 + int(0.5 + 0.5*(normals[i][1]/veclen))*1023<<10 + int(0.5 + 0.5*(normals[i][j]/veclen))*1023
-                    # print(hex(color),col)
                     self.data.write(struct.pack('<I', col))
-                    # self.data.read(4)
                 elif o[0] == 'g':  # col1
                     col = (
                         int(cols[1][i][0]) << 20) + (int(cols[1][i][1]) << 10) + (int(cols[1][i][2]))
@@ -1016,7 +1009,7 @@ class fifa_rx3:
                                 id].vertsCount, self.object_list[id].chunkLength, 1))
                 # data
                 self.convert_mesh_to_bytes(self.object_list[id].meshDescrShort, self.object_list[id].vertsCount, self.object_list[
-                                           id].verts, self.object_list[id].uvs, self.object_list[id].colors, self.object_list[id].normals)
+                                           id].verts, self.object_list[id].uvs, self.object_list[id].colors)
             elif self.offset_list[i][0] == 3566041216:  # 80......
                 self.data.write(struct.pack('<4I', 4, 0, 0, 0))
             elif self.offset_list[i][0] == 230948820:  # GROUPS
