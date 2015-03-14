@@ -22,11 +22,11 @@ else:
 
 fifa_main_path = 'fifa_tools' + os.sep + 'scripts' + os.sep + 'fifa_main.py'
 fifa_main = imp.load_source('fifa_main', prePath + fifa_main_path)
-# fifa_main=imp.load_compiled('fifa_main','fifa_tools\\scripts\\fifa_main.pyc')
+# fifa_main=imp.load_compiled('fifa_main','fifa_tools' + os.sep + 'scripts' + os.sep + 'fifa_main.pyc')
 fifa_func_path = 'fifa_tools' + os.sep + \
     'scripts' + os.sep + 'fifa_functions.py'
 fifa_func = imp.load_source('fifa_func', prePath + fifa_func_path)
-# fifa_func=imp.load_compiled('fifa_func','fifa_tools\\scripts\\fifa_functions.pyc')
+# fifa_func=imp.load_compiled('fifa_func','fifa_tools' + os.sep + 'scripts' + os.sep + 'fifa_functions.pyc')
 from fifa_func import general_helper as gh
 from fifa_func import texture_helper as tex_gh
 from fifa_main import sig, crowdGroup

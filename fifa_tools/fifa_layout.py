@@ -30,7 +30,7 @@ fifa_operators_path = 'fifa_tools' + os.sep + \
     'scripts' + os.sep + 'fifa_operators.py'
 fifa_operators = imp.load_source(
     'fifa_operators', prePath + fifa_operators_path)
-# fifa_operators=imp.load_compiled('fifa_operators','fifa_tools\\scripts\\fifa_operators.pyc')
+# fifa_operators=imp.load_compiled('fifa_operators','fifa_tools' + os.sep + 'scripts' + os.sep + 'fifa_operators.pyc')
 from fifa_operators import light_props as light_props
 version_text = 'v' + str(version[0]) + '.' + \
     str(version[1]) + ', made by arti-10'

@@ -21,7 +21,7 @@ else:
 fifa_func_path = 'fifa_tools' + os.sep + \
     'scripts' + os.sep + 'fifa_functions.py'
 fifa_func = imp.load_source('fifa_func', prePath + fifa_func_path)
-# fifa_func=imp.load_compiled('fifa_func','fifa_tools\\scripts\\fifa_functions.pyc')
+# fifa_func=imp.load_compiled('fifa_func','fifa_tools' + os.sep + 'scripts' + os.sep + 'fifa_functions.pyc')
 from mathutils import Vector, Euler, Matrix
 from math import radians, sqrt
 from subprocess import call
