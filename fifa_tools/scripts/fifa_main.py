@@ -47,18 +47,13 @@ class crowdGroup:
                     'halfFull': 25,
                     'almostEmpty': 10,
                     'empty': 0}
-    typeDict = {'hardcoreHome': (0, 0),
-                'metalcoreHome': (0, 128),
-                'heavyHome': (128, 0),
-                'popHome': (128, 128),
-                'folkHome': (128, 255),
-                'chickenAway': (255, 128),
-                'metalcoreHome': (128, 0),
-                'heavyHome': (0, 128),
-                'popHome': (128, 128),
-                'folkHome': (255, 255),
-                'chickenAway': (128, 255),
-                'deadAway': (255, 255)}
+   typeDict = {'hardcoreHome': (0, 0),         # Home strips visible
+            'metalcoreHome': (128, 0),      # Home Strips Visible
+            'heavyHome': (0, 128),          # no Colours but cheers when home team score
+            'popHome': (128, 128),          # no Colours but cheers when home team score
+            'folkHome': (255, 128),         # no Colours but cheers when home team score
+            'chickenAway': (128, 255),      # Away strips Visible
+            'deadAway': (255, 255)}         # Away Strips Visible
 
     def __init__(self, name):
         # define subgroups
