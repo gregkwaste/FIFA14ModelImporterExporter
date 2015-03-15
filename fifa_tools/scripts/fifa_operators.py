@@ -123,7 +123,10 @@ standard_materials = ['adboard', 'adboarddigital', 'adboarddigitalglow', 'adboar
                       'homeprimary', 'homesecondary', 'initialshadinggroup', 'jumbotron', 'metalbare', 'metalpainted', 'pitch', 'pitchnoline', 'rubbershadow', 'sclockhalves', 'sclockminutesones',
                       'sclockminutestens', 'sclockscoreawayones', 'sclockscoreawaytens', 'sclockscorehomeones', 'sclockscorehometens', 'sclocksecondsones', 'sclocksecondstens', 'sclocktimeanalog',
                       'simpleglow', 'sky', 'snowpile', 'tournament']
-
+#Adding more adboard materials
+for i in range(100): standard_materials.append('adboarddigitalwide'+str(i))
+for i in range(100): standard_materials.append('adboardsingledigitalglow'+str(i))
+for i in range(100): standard_materials.append('bannergroup'+str(i))
 
 # OPERATORS
 class align_crowd_faces(bpy.types.Operator):
@@ -923,8 +926,11 @@ class texture_export(bpy.types.Operator):
     def invoke(self, context, event):
         scn = bpy.context.scene
         textures_list = []
+        ambient_textures_list=[]
         texture_dict = {}
         status = ''
+        mat_exceptions=['jumbotron']
+
 
         # EXPORT STADIUM/TROPHY/BALL TEXTURES
         if scn.stadium_export_flag or scn.trophy_export_flag:
@@ -932,7 +938,13 @@ class texture_export(bpy.types.Operator):
             for item in bpy.data.objects:
                 if (scn.stadium_export_flag and item.type == 'EMPTY' and item.name[0:5] == 'stad_') or (scn.trophy_export_flag and item.type == 'EMPTY' and item.name in ['BALL', 'TROPHY']):
                     for child_item in item.children:
-                        item_texture_dict, item_textures_list, status = tex_gh.get_textures_list(child_item)
+                        mat = bpy.data.materials[child_item.material_slots[0].material.name]
+                        item_texture_dict, item_textures_list, ambient, status = tex_gh.get_textures_list(child_item)
+                        if ambient and (not ambient in ambient_textures_list) and (not mat.name in mat_exceptions): ambient_textures_list.append(ambient)
+                        #Handle Exceptions
+                        if mat.name in mat_exceptions:
+                          item_textures_list.append(ambient)
+
                         texture_dict.update(item_texture_dict)
                         for t in item_textures_list:
                             if not t in textures_list:
@@ -941,7 +953,10 @@ class texture_export(bpy.types.Operator):
                         if status == 'material_missing':
                             self.report({'ERROR'}, 'Missing Material')
                             return {'CANCELLED'}
-
+            
+            #Append all ambients on the end
+            textures_list.extend(ambient_textures_list)
+            
             if scn.trophy_export_flag:
                 type = 'trophy-ball_'  # fix file naming for trophy or ball
             if scn.stadium_export_flag:
@@ -971,8 +986,9 @@ class texture_export(bpy.types.Operator):
                 self.report(
                     {'ERROR'}, 'Missing Appropriate Object. Check the naming.')
 
-            texture_dict, textures_list, status = fifa_main.get_textures_list(
+            texture_dict, textures_list, ambient, status = fifa_main.get_textures_list(
                 object)
+            if ambient: textures_list.append(ambient)
             if status == 'material_missing':
                 self.report({'ERROR'}, 'Missing Material')
                 return {'CANCELLED'}
@@ -1021,8 +1037,9 @@ class texture_export(bpy.types.Operator):
 
                 if head_found:
                     # COMMON PROCEDURE
-                    texture_dict, textures_list, status = tex_gh.get_textures_list(
+                    texture_dict, textures_list, ambient, status = tex_gh.get_textures_list(
                         object)
+                    if ambient: textures_list.append(ambient)
                     # check for missing material
                     if status == 'material_missing':
                         self.report({'ERROR'}, 'Missing Face Material')
@@ -1058,8 +1075,9 @@ class texture_export(bpy.types.Operator):
 
                 if eyes_found:
                     # COMMON PROCEDURE
-                    texture_dict, textures_list, status = tex_gh.get_textures_list(
+                    texture_dict, textures_list, ambient, status = tex_gh.get_textures_list(
                         object)
+                    if ambient: textures_list.append(ambient)
                     # check for missing material
                     if status == 'material_missing':
                         self.report({'ERROR'}, 'Missing Eyes Material')
@@ -1095,8 +1113,9 @@ class texture_export(bpy.types.Operator):
                     self.report({'ERROR'}, 'Hair Part not found')
                     return {'CANCELLED'}
 
-                texture_dict, textures_list, status = tex_gh.get_textures_list(
+                texture_dict, textures_list, ambient, status = tex_gh.get_textures_list(
                     object)
+                if ambient: textures_list.append(ambient)
                 if status == 'material_missing':  # check for missing material
                     self.report({'ERROR'}, 'Missing Material')
                     return {'CANCELLED'}
@@ -1167,7 +1186,7 @@ class test_file_export(bpy.types.Operator):
             # stadium props handling
             if scn.stadium_export_flag and item.type == 'EMPTY' and item.name == 'PROPS':
                 rot_x_mat = Matrix.Rotation(radians(-90), 4, 'X')
-                scale_mat = Matrix.Scale(1000, 4)
+                scale_mat = Matrix.Scale(100, 4)
                 for child_item in item.children:
                     co = rot_x_mat * scale_mat * child_item.location
                     rot = (child_item.rotation_euler[0], child_item.rotation_euler[
@@ -1604,7 +1623,7 @@ class add_prop(bpy.types.Operator):
 
     def invoke(self, context, event):
         scn = context.scene
-        fifa_func.create_prop(scn.prop_enum, scn.cursor_location, (0, 0, 0))
+        gh.create_prop(scn.prop_enum, scn.cursor_location, (0, 0, 0))
         return {'FINISHED'}
 
 ###REMOVE UNUSED MESHES FROM THE SCENE###

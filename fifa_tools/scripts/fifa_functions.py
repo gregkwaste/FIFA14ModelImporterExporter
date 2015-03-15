@@ -78,6 +78,7 @@ class texture_helper:
         texture_dict = {}
         textures_list = []
         status = ''
+        ambient = None
 
         try:
             mat = bpy.data.materials[object.material_slots[0].material.name]
@@ -91,8 +92,11 @@ class texture_helper:
                         bpy.data.images[texture_image].size[0], bpy.data.images[texture_image].size[1])
 
                     # if not texture_name in texture_dict:
-                    textures_list.append(
-                        [texture_name, texture_path, texture_alpha, 0, 0, 0, 0, '', texture_maxsize])
+                    if i is not 1:
+                        textures_list.append(
+                            [texture_name, texture_path, texture_alpha, 0, 0, 0, 0, '', texture_maxsize])
+                    else:
+                        ambient = [texture_name, texture_path, texture_alpha, 0, 0, 0, 0, '', texture_maxsize]
                     # store texture_information indexed in the dictionary
                     texture_dict[texture_name] = len(textures_list)
                 except:
@@ -103,7 +107,7 @@ class texture_helper:
         except:
             status = 'material_missing'
 
-        return texture_dict, textures_list, status
+        return texture_dict, textures_list, ambient,status
 
 
 # Helping function class
@@ -336,7 +340,7 @@ class general_helper:
 
         # Matrices
         rot_x_mat = Matrix.Rotation(radians(-90), 4, 'X')
-        scale_mat = Matrix.Scale(1000, 4)
+        scale_mat = Matrix.Scale(100, 4)
 
         # Getters
         getz = operator.itemgetter(2)
