@@ -290,7 +290,7 @@ class lights_export(bpy.types.Operator):
         xmlstring = ''
         indent = 0
         rot_x_mat = Matrix.Rotation(radians(-90), 4, 'X')
-        scale_mat = Matrix.Scale(1000, 4)
+        scale_mat = Matrix.Scale(100, 4)
 
         # START PASSING DATA
         xmlstring += '<particleSystem>' + '\n'
