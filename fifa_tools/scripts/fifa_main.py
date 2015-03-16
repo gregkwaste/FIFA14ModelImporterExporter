@@ -47,7 +47,7 @@ class crowdGroup:
                     'halfFull': 25,
                     'almostEmpty': 10,
                     'empty': 0}
-   typeDict = {'hardcoreHome': (0, 0),         # Home strips visible
+    typeDict = {'hardcoreHome': (0, 0),         # Home strips visible
             'metalcoreHome': (128, 0),      # Home Strips Visible
             'heavyHome': (0, 128),          # no Colours but cheers when home team score
             'popHome': (128, 128),          # no Colours but cheers when home team score
