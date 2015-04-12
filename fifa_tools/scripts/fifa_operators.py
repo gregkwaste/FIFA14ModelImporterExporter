@@ -138,7 +138,7 @@ class align_crowd_faces(bpy.types.Operator):
         scn = bpy.context.scene
         #ob = bpy.context.object
 
-        vec_dict = {0: Vector((scn.cursor_location.x, scn.cursor_location.y)),
+        vec_dict = {0: 'cursor',
                     1: Vector((1, 0)),
                     2: Vector((0, 1)),
                     3: Vector((-1, 0)),
@@ -861,7 +861,7 @@ class file_import(bpy.types.Operator):
             for group in crowdGroupList:
                 group.passGroupsToObject(bpy.data.objects[crowd_name])
 
-            bpy.data.objects[crowd_name].scale = Vector((0.001, 0.001, 0.001))
+            bpy.data.objects[crowd_name].scale = Vector((0.01, 0.01, 0.01))
             bpy.data.objects[crowd_name].rotation_euler[0] = radians(90)
 
         # IMPORT LNX FILE
@@ -1331,7 +1331,7 @@ class test_file_export(bpy.types.Operator):
 
                     # FINALISE ENTRY ADDITION
                     # entry.append(entry_diffuse) #12
-                    entry.diffuseId = entry_diffuse
+                    #entry.diffuseId = entry_diffuse
                     #entry.append(entry_ambient) ###
                     try:
                         entry.material = entry_material  # 13

@@ -1361,25 +1361,26 @@ def crowd_seat_align(align_vector):
     ob = bpy.context.object
     bm = bmesh.from_edit_mesh(ob.data)
 
-    for f in bm.faces:
-        if f.select:
-            base = gh.face_center(f)
-
-            if align_vector == Vector((0, 0, 0)):  # calculate cursor vector
-                align_vector = ob.matrix_world.inverted(
-                ) * (scn.cursor_location - (ob.matrix_world * base))
-                align_vector = Vector((align_vector[0], align_vector[1]))
-
+    for i in range(len(bm.faces)):
+        f=bm.faces[i]
+        rotation_vector=align_vector
+        if f.select:    
+            base = f.calc_center_median()
+            if align_vector == 'cursor':  # calculate cursor vector
+                rotation_vector=scn.cursor_location - ob.matrix_world * base
+                rotation_vector = Vector((rotation_vector.x, rotation_vector.y))
+            
             angle = Vector((f.normal[0], f.normal[1])).angle_signed(
-                align_vector)  # calculate declining angle
-            # print('Angle: ',round(angle),degrees(angle))
+                rotation_vector)  # calculate declining angle
+            print('Face ID', i, 'Angle: ',round(angle,4),degrees(angle))
 
-            rot_mat = Matrix.Rotation(round(-angle, 2), 4, 'Z')
+            rot_mat = Matrix.Rotation(round(-angle, 8), 4, 'Z')
 
             for v in f.verts:
                 v.co = v.co - base
                 v.co = rot_mat * v.co
                 v.co = v.co + base
+            #f.normal_update()
     bm.normal_update()
     bmesh.update_edit_mesh(ob.data, False)
 
