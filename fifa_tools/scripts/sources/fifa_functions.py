@@ -18,10 +18,15 @@ if os.name == 'nt':  # windows detected
 else:
     prePath = linux_path + os.sep
 
-halfpath = 'fifa_tools' + os.sep + 'scripts' + os.sep + 'half.py'
-# half=imp.load_source('half',halfpath)
-half = imp.load_compiled(
-    'half', prePath + 'fifa_tools' + os.sep + 'scripts' + os.sep + 'half.pyc')
+fifa_source_path = os.path.join('fifa_tools', 'scripts', 'source')
+fifa_compiled_path = os.path.join('fifa_tools', 'scripts', 'compiled')
+
+try:
+    half = imp.load_source('half', prePath + os.path.join(fifa_source_path, 'half.py'))
+    print('Loading Source File')
+except:
+    half = imp.load_compiled('half', prePath + os.path.join(fifa_compiled_path, 'half.pyc'))
+
 dir = 'fifa_tools'
 comp = half.Float16Compressor()
 

@@ -26,11 +26,16 @@ if os.name == 'nt':  # windows detected
 else:
     prePath = linux_path + os.sep
 
-fifa_operators_path = 'fifa_tools' + os.sep + \
-    'scripts' + os.sep + 'fifa_operators.py'
-fifa_operators = imp.load_source(
-    'fifa_operators', prePath + fifa_operators_path)
-# fifa_operators=imp.load_compiled('fifa_operators','fifa_tools' + os.sep + 'scripts' + os.sep + 'fifa_operators.pyc')
+fifa_source_path = os.path.join('fifa_tools', 'scripts', 'source')
+fifa_compiled_path = os.path.join('fifa_tools', 'scripts', 'compiled')
+
+try:
+    fifa_operators = imp.load_source('fifa_operators', prePath + os.path.join(fifa_source_path, 'fifa_operators.py'))
+    print('Loading Source File')
+except:
+    fifa_operators = imp.load_compiled('fifa_operators', prePath + os.path.join(fifa_compiled_path, 'fifa15_operators.pyc'))
+
+
 from fifa_operators import light_props as light_props
 version_text = 'v' + str(version[0]) + '.' + \
     str(version[1]) + ', made by arti-10'
