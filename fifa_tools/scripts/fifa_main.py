@@ -1862,15 +1862,22 @@ def write_crowd_file(f, object):
             f.write(
                 struct.pack('<3B', int(color[0]), int(color[1]), int(color[2])))
         except:
-            print('exception')
+            print('Color exception')
             f.write(struct.pack('<3B', 255, 255, 255))
 
         # home/away attendance
         testvert = face.verts[0].index
 
         # print(testvert)
-        g = object.data.vertices[testvert].groups[0]
-        print(g.group)
+        try:
+            g = object.data.vertices[testvert].groups[0]
+            # print(g.group)
+        except:
+            f.close()
+            print('Unassigned Crowd Vertices')
+            return
+
+
 
         gnameParts = object.vertex_groups[g.group].name.split(sep='_')
 
